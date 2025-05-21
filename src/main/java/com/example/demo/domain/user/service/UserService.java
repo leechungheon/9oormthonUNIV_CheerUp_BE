@@ -49,8 +49,6 @@ public class UserService {
             throw new IllegalArgumentException("이메일 혹은 비밀번호를 다시 확인하세요.");
         }
 
-        String token = jwtTokenProvider.createToken(user);
-
-        return token;
+        return jwtTokenProvider.createToken(user);
     }
 }

@@ -14,7 +14,7 @@ public class JwtTokenProvider {
         return JWT.create()
                 .withSubject(user.getEmail())
                 .withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.EXPIRATION_TIME))
-                .withClaim("email", user.getEmail())
+                .withClaim("id", user.getId())
                 .withClaim("username", user.getUsername())
                 .sign(Algorithm.HMAC512(JwtProperties.SECRET));
     }
