@@ -21,8 +21,8 @@ public enum ErrorCode {
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "입력값이 유효하지 않습니다."),
 
     // 응원함/메시지 등 리소스 관련
-    MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
-    STORY_NOT_FOUND(HttpStatus.NOT_FOUND, "스토리를 찾을 수 없습니다."),
+    MESSAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "응원메시지를 찾을 수 없습니다."),
+    STORY_NOT_FOUND(HttpStatus.NOT_FOUND, "응원함을 찾을 수 없습니다."),
 
     // 데이터베이스 및 서버 관련
     DATA_ACCESS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "데이터베이스 처리 중 오류가 발생했습니다."),
