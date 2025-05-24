@@ -1,6 +1,6 @@
 # 자바 버전 17
 FROM openjdk:17
-LABEL authors="leech"
+LABEL authors="leechungheon"
 
 COPY build/libs/*.jar /app.jar
 
