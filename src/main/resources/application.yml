@@ -9,7 +9,7 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/goormthon
+    url: jdbc:mysql://localhost:3306/test
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
     password: 1234
