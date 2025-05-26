@@ -8,6 +8,7 @@ import com.example.demo.global.jwt.JwtTokenProvider;
 import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 @Service
 public class UserService {
@@ -52,5 +53,20 @@ public class UserService {
         String token = jwtTokenProvider.createToken(user);
 
         return token;
+    }
+
+    public User processOAuth2User(OAuth2User oauthUser) {
+        // OAuth2 사용자 정보 처리 로직
+        String email = oauthUser.getAttribute("email");
+        String name = oauthUser.getAttribute("name");
+        User user = userRepository.findByEmail(email)
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .email(email)
+                        .username(name)
+                        .password("") // OAuth2 로그인에서는 비밀번호가 없으므로 빈 문자열
+                        .role("ROLE_USER")
+                        .build())
+                );
+        return user;
     }
 }
