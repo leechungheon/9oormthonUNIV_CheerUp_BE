@@ -4,7 +4,12 @@ import com.example.demo.domain.category.repository.CategoryRepository;
 import com.example.demo.domain.story.dto.*;
 import com.example.demo.domain.story.entity.Story;
 import com.example.demo.domain.story.repository.StoryRepository;
+import com.example.demo.domain.user.entity.User;
+import com.example.demo.global.auth.PrincipalDetails;
+import com.example.demo.global.exception.CustomException;
+import com.example.demo.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,18 +26,33 @@ public class StoryService {
     private final CategoryRepository categoryRepository; // 카테고리 리포지토리 의존성 주입
 
     @Transactional // 사연 생성
-    public StoryResponse create(StoryRequest req) {
-        var category = categoryRepository.findById(req.getCategoryId())
-                .orElseThrow(() -> new IllegalArgumentException("해당 카테고리가 존재하지 않습니다."));
+    public StoryResponse create(PrincipalDetails principal, StoryRequest req) {
+        try {
+            User user = principal.getUser(); // 로그인한 유저 객체 가져오기
+            if (user == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안되어 있다면
+            }
+            if (req.getContent() == null || req.getContent().isBlank()) {
+                throw new CustomException(ErrorCode.INVALID_CONTENT); // 내용이 비어있다면
+            }
+            var category = categoryRepository.findById(req.getCategoryId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CATEGORY)); // 카테고리 유효성 검사
 
-        Story story = Story.builder()
-                .content(req.getContent())
-                .userNumber(req.getUserNumber())
-                .createdAt(LocalDateTime.now())
-                .category(category)
-                .build();
+            Story story = Story.builder()
+                    .content(req.getContent())
+                    .user(user)
+                    .createdAt(LocalDateTime.now())
+                    .category(category)
+                    .build();
 
-        return toDto(storyRepository.save(story));
+            storyRepository.save(story);
+            return toDto(story);
+
+        } catch (DataAccessException e) {
+            throw new CustomException(ErrorCode.DATA_ACCESS_ERROR); // Handle database access errors
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR); // Handle unexpected errors
+        }
     }
 
     @Transactional(readOnly = true) // 전체 사연 조회
@@ -77,8 +97,8 @@ public class StoryService {
     }
 
     @Transactional(readOnly = true) // 특정 사용자의 사연 목록 조회
-    public List<StoryResponse> myStories(Long userNumber) {
-        return storyRepository.findByUserNumber(userNumber).stream()
+    public List<StoryResponse> myStories(Long userId) {
+        return storyRepository.findByUserId(userId).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
@@ -86,12 +106,10 @@ public class StoryService {
     // 엔티티를 DTO로 변환
     private StoryResponse toDto(Story s) {
         return StoryResponse.builder()
-                .storyId(s.getStoryId())
                 .content(s.getContent())
                 .createdAt(s.getCreatedAt())
-                .userNumber(s.getUserNumber())
-                .cheerCount(s.getCheerMessages() != null ? s.getCheerMessages().size() : 0)
-                .categoryName(s.getCategory() != null ? s.getCategory().getCategoryName() : null)
+                .cheerMessages(s.getCheerMessages())
+                .category(s.getCategory())
                 .build();
     }
 }

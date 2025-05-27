@@ -13,8 +13,5 @@ public class StoryRequest {
     private String content; // 사연 내용
 
     @NotNull
-    private Long userNumber; // 사용자 번호
-
-    @NotNull
     private Long categoryId; // 카테고리 ID
 }

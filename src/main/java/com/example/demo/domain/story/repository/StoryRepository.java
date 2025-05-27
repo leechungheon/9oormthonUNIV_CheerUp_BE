@@ -20,5 +20,5 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
         """)
     List<Story> findPopularStories(Pageable pageable); // 응원 수 기준 인기 사연 조회
 
-    List<Story> findByUserNumber(Long userNumber); // 특정 사용자의 사연 목록 조회
+    List<Story> findByUserId(Long id);
 }

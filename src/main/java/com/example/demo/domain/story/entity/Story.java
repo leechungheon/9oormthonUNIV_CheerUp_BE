@@ -3,6 +3,8 @@ package com.example.demo.domain.story.entity;
 import com.example.demo.domain.cheer.entity.CheerMessage;
 import com.example.demo.domain.category.entity.Category;
 
+import com.example.demo.domain.user.entity.User;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,7 +22,7 @@ public class Story {
 
     @Id // 기본 키 지정
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 증가 전략
-    private Long storyId; // 사연 ID
+    private Long storyId; // 응원함 PK
 
     @Column(nullable = false, columnDefinition = "TEXT") // not null, 긴 텍스트 허용
     private String content; // 사연 내용
@@ -28,8 +30,10 @@ public class Story {
     @Column(nullable = false)
     private LocalDateTime createdAt; // 생성 시각
 
-    @Column(nullable = false)
-    private Long userNumber; // 사용자 번호
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference
+    private User user;
 
     @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true) // 응원 메시지와 1:N 관계
     private List<CheerMessage> cheerMessages = new ArrayList<>(); // 연결된 응원 메시지 목록

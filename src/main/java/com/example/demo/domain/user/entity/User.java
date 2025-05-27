@@ -1,7 +1,12 @@
 package com.example.demo.domain.user.entity;
 
+import com.example.demo.domain.story.entity.Story;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity // JPA 엔티티 매핑
 @Data // Getter, Setter, toString, equals, hashCode 자동 생성
@@ -26,6 +31,12 @@ public class User {
     private String role; // 사용자 권한 (예: USER, ADMIN)
 
     private String profileImageUrl; // 프로필 이미지 URL (nullable)
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    //mappedBy = "user"는 Story 엔티티의 user 필드가 외래키의 주인임을 의미
+    private List<Story> stories = new ArrayList<>();
+
 
     // 생성자 오버로딩
     public User(String email, String username, String password, String role, String profileImageUrl) {
