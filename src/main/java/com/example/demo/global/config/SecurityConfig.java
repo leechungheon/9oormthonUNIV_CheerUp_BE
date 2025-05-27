@@ -38,6 +38,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/**"
                         ).permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api-docs/**"  // ← 네 설정에서 사용 중인 커스텀 경로
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
 
