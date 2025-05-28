@@ -45,7 +45,6 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-
       # 4️⃣ 도커 이미지 빌드 → 태깅 → ECR에 푸시
       - name: Build, tag, and push image to ECR
         run: |
@@ -53,14 +52,19 @@ jobs:
           docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
+      # 🆕 🔐 base64로 인코딩된 PEM 키를 디코딩하고 권한 부여 (appleboy/ssh-action이 key_path로 접근 가능하도록)
+      - name: Decode SSH private key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" | base64 -d > ec2_key.pem  # base64 디코딩 → 파일로 저장
+          chmod 600 ec2_key.pem  # SSH 키 파일 권한 설정
+
       # 5️⃣ EC2에 SSH 접속해서 ECR에서 이미지 pull + docker-compose 실행
       - name: SSH & Deploy on EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}        # EC2 퍼블릭 IP
           username: ${{ secrets.EC2_USER }}    # 보통 'ec2-user'
-          key: ${{ secrets.EC2_KEY }}          # EC2에 접속할 PEM 키 (base64 디코딩된 문자열로)
+          key_path: ec2_key.pem                # 디코딩된 키 파일 경로 (key 대신 key_path 사용)
           script: |
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
             docker-compose -f /home/ubuntu/cheerup-server/compose.yml up -d
-
