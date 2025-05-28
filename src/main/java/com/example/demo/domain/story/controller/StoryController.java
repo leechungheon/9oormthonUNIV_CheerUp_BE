@@ -38,10 +38,15 @@ public class StoryController {
     }
 
     @Operation(summary = "특정 응원함 조회", description = "{id}의 응원함을 조회합니다.")
-    @GetMapping("/{id}")
-    public ResponseEntity<StoryResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(storyService.findById(id));
+    @GetMapping("/{storyId}")
+    public ApiResponse<StoryResponse> getStoryById(
+            @PathVariable Long storyId,
+            @AuthenticationPrincipal PrincipalDetails principal) {
+
+        StoryResponse foundStory = storyService.getStoryById(storyId, principal);
+        return ApiResponse.success(foundStory, "스토리 단건 조회 성공");
     }
+
 
     @Operation(summary = "응원함 수정")
     @PutMapping("/{id}")

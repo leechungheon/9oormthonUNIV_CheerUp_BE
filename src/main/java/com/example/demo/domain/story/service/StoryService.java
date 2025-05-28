@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service // 서비스 계층 선언
@@ -63,11 +64,29 @@ public class StoryService {
     }
 
     @Transactional(readOnly = true) // ID로 사연 단건 조회
-    public StoryResponse findById(Long id) {
-        return storyRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사연이 없습니다."));
+    public StoryResponse getStoryById(Long storyId, PrincipalDetails principal) {
+        try {
+            User currentUser = principal.getUser(); // 현재 로그인한 사용자
+            if (currentUser == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안 된 상태
+            }
+
+            Story story = storyRepository.findById(storyId)
+                    .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND)); // 스토리가 없는 경우
+
+            if (!Objects.equals(story.getUser().getId(), currentUser.getId())) {
+                throw new CustomException(ErrorCode.FORBIDDEN); // 본인이 작성한 사연이 아닐 경우 권한 없음
+            }
+
+            return toDto(story);
+
+        } catch (DataAccessException e) {
+            throw new CustomException(ErrorCode.DATA_ACCESS_ERROR);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
+
 
     @Transactional // 사연 수정
     public StoryResponse update(Long id, StoryRequest req) {
