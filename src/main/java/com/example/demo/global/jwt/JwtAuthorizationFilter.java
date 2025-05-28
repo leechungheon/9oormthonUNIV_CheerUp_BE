@@ -5,11 +5,14 @@ import com.example.demo.domain.user.entity.User;
 import com.example.demo.global.auth.PrincipalDetails;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -18,25 +21,39 @@ import java.util.Collections;
  * JWT 인증(Authorization)을 위한 필터
  * - 모든 요청마다 실행되며, JWT가 포함된 경우 이를 검증하고 인증 정보를 등록한다.
  */
+@Slf4j
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
 
     public JwtAuthorizationFilter(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
-    }
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    }    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         // 1. 요청 헤더에서 Authorization 값을 가져온다.
         String header = request.getHeader(JwtProperties.HEADER_STRING);
+        log.debug("Processing request URI: {} with Authorization header: {}", request.getRequestURI(), header);
+
+        // 쿠키에서 JWT 토큰 확인 (헤더에 없는 경우)
+        if ((header == null || !header.startsWith(JwtProperties.TOKEN_PREFIX)) && request.getCookies() != null) {
+            log.debug("No Authorization header found, checking cookies...");
+            for (Cookie cookie : request.getCookies()) {
+                if ("token".equals(cookie.getName())) {
+                    String token = cookie.getValue();
+                    log.debug("Found JWT token in cookie, setting as Authorization header");
+                    header = JwtProperties.TOKEN_PREFIX + token;
+                    break;
+                }
+            }
+        }
 
         // 2. 헤더가 없거나 "Bearer "로 시작하지 않으면 필터를 타지 않고 다음 필터로 넘긴다.
         if (header == null || !header.startsWith(JwtProperties.TOKEN_PREFIX)) {
+            log.debug("No valid JWT token found, proceeding without authentication");
             filterChain.doFilter(request, response);
             return;
         }

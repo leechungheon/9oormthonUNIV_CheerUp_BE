@@ -37,33 +37,44 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .formLogin(form -> form.disable())
-            .httpBasic(httpBasic -> httpBasic.disable())
-            .oauth2Login(oauth2 -> oauth2
+            .httpBasic(httpBasic -> httpBasic.disable())            .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
                 .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-            )
+            ).logout(logout -> logout
+                .logoutUrl("/api/users/logout")
+                .deleteCookies("token")
+                .logoutSuccessUrl("/api/users/home")
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                })            )
+            // 로그인 요청 처리 필터
             .addFilter(new JwtAuthenticationFilter(authMgr, jwtTokenProvider))
+            // JWT 검증 및 권한 설정 필터
             .addFilterAfter(new JwtAuthorizationFilter(jwtTokenProvider), JwtAuthenticationFilter.class)
-            .authorizeHttpRequests(auth -> auth
-                // OAuth2 요청·콜백, 테스트 페이지 및 Swagger 허용
+            .authorizeHttpRequests(auth -> auth                // OAuth2 요청·콜백, 테스트 페이지 및 Swagger/OpenAPI 허용
                 .requestMatchers(
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/api/users/test",
+                    "/login",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/v3/api-docs/**"
-                ).permitAll()
-                // API 엔드포인트 중 회원가입·로그인 또는 홈페이지 공개
+                    "/v3/api-docs/**",
+                    "/api-docs/**"
+                ).permitAll()                // API 엔드포인트 중 회원가입·로그인 또는 홈페이지 공개
                 .requestMatchers(
                     "/api/users/signup",
                     "/api/users/login",
-                    "/api/users/home"
+                    "/api/users/home",
+                    "/api/users/oauth2/google",
+                    "/api/users/logout",
+                    "/v3/api-docs/**",
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/webjars/swagger-ui/**"
                 ).permitAll()
                 .anyRequest().authenticated()
-            );
-
-        return http.build();
+            );        return http.build();
     }
 }
