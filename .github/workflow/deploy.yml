@@ -1,0 +1,53 @@
+name: Deploy to EC2 via Docker
+
+# 🟡 언제 실행될지 설정: main 브랜치에 push가 발생할 때 실행됨
+on:
+  push:
+    branches: [ main ]
+
+# 🟢 환경 변수 설정: ECR 정보 및 이미지 태그
+env:
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}  # 예: cheerup-server
+  ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}      # 예: 5460xxxxxxx.dkr.ecr.ap-northeast-2.amazonaws.com
+  IMAGE_TAG: latest                              # 도커 이미지 태그
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # GitHub Actions가 실행될 가상 머신 환경 (Ubuntu)
+
+    steps:
+      # 1️⃣ GitHub 소스 코드 체크아웃
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      # 2️⃣ AWS 인증 정보 설정 (ECR 및 EC2에 접근할 수 있도록)
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      # 3️⃣ ECR 로그인 (도커가 AWS 컨테이너 레지스트리에 접근 가능하도록 인증)
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 4️⃣ 도커 이미지 빌드 → 태깅 → ECR에 푸시
+      - name: Build, tag, and push image to ECR
+        run: |
+          docker build -t $ECR_REPOSITORY:$IMAGE_TAG . 
+          docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      # 5️⃣ EC2에 SSH 접속해서 ECR에서 이미지 pull + docker-compose 실행
+      - name: SSH & Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}        # EC2 퍼블릭 IP
+          username: ${{ secrets.EC2_USER }}    # 보통 'ec2-user'
+          key: ${{ secrets.EC2_KEY }}          # EC2에 접속할 PEM 키 (base64 디코딩된 문자열로)
+          script: |
+            docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+            docker-compose -f /home/ubuntu/cheerup-server/compose.yml up -d
+

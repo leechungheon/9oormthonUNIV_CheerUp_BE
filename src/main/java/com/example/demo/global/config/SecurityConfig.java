@@ -36,14 +36,15 @@ public class SecurityConfig {
                 .addFilterAfter(new JwtAuthorizationFilter(jwtTokenProvider), JwtAuthenticationFilter.class) // 권한 처리 필터
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/**"
-                        ).permitAll()
-                        .requestMatchers(
                                 "/v3/api-docs/**",
+                                "/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/api-docs/**"  // ← 네 설정에서 사용 중인 커스텀 경로
+                                "/swagger-resources/**",
+                                "/webjars/**",
+                                "/favicon.ico"
                         ).permitAll()
+                        .requestMatchers("/api/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

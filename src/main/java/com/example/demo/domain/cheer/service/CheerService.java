@@ -23,7 +23,7 @@ public class CheerService {
     private final StoryRepository storyRepository;
     private final UserCheerLimitRepository limitRepository;
 
-    @Transactional // 응원 메시지 생성
+    /*@Transactional // 응원 메시지 생성
     public CheerResponse create(CheerRequest req) {
         var story = storyRepository.findById(req.getStoryId())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사연입니다."));
@@ -38,7 +38,7 @@ public class CheerService {
 
         cm = cheerRepository.save(cm);
         return toDto(cm);
-    }
+    }*/
 
     @Transactional(readOnly = true) // 특정 사연의 응원 메시지 전체 조회
     public List<CheerResponse> findByStory(Long storyId) {
@@ -86,11 +86,11 @@ public class CheerService {
     // 엔티티를 DTO로 변환
     private CheerResponse toDto(CheerMessage cm) {
         return CheerResponse.builder()
-                .cheerMessageId(cm.getCheerMessageId())
-                .storyId(cm.getStory().getStoryId())
+                //.cheerMessageId(cm.getCheerMessageId())
+                //.storyId(cm.getStory().getStoryId())
                 .content(cm.getContent())
                 .createdAt(cm.getCreatedAt())
-                .userNumber(cm.getUserNumber())
+                //.userNumber(cm.getUserNumber())
                 .category(cm.getCategory())
                 .build();
     }

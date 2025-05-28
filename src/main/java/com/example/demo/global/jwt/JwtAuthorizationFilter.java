@@ -32,6 +32,19 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String uri = request.getRequestURI();
+        System.out.println("요청 URI: " + request.getRequestURI());
+
+        // ✅ Swagger 관련 경로는 필터 스킵
+        if (uri.startsWith("/swagger-ui") ||
+                uri.startsWith("/v3/api-docs") ||
+                uri.startsWith("/swagger-resources") ||
+                uri.equals("/swagger-ui.html") ||
+                uri.equals("/favicon.ico")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // 1. 요청 헤더에서 Authorization 값을 가져온다.
         String header = request.getHeader(JwtProperties.HEADER_STRING);
 
