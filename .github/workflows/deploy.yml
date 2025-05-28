@@ -45,6 +45,15 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
+      - name: Debug env vars before build & push
+        run: |
+            echo "ECR_REPOSITORY='$ECR_REPOSITORY'"
+            echo "ECR_REGISTRY='$ECR_REGISTRY'"
+            echo "IMAGE_TAG='$IMAGE_TAG'"
+            echo "Docker build command: docker build -t $ECR_REPOSITORY:$IMAGE_TAG ."
+            echo "Docker tag command: docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+            echo "Docker push command: docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
       # 4️⃣ 도커 이미지 빌드 → 태깅 → ECR에 푸시
       - name: Build, tag, and push image to ECR
         run: |
@@ -67,4 +76,5 @@ jobs:
           key_path: ec2_key.pem                # 디코딩된 키 파일 경로 (key 대신 key_path 사용)
           script: |
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-            docker-compose -f /home/ubuntu/cheerup-server/compose.yml up -d
+            docker compose -f /home/ubuntu/cheerup-server/compose.yml up -d
+          
