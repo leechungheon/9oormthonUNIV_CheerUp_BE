@@ -21,12 +21,12 @@ public class CheerController {
 
     private final CheerService cheerService; // 응원 서비스 의존성 주입
 
-    @Operation(summary = "응원 메시지 생성")
+    /*@Operation(summary = "응원 메시지 생성")
     @PostMapping // 응원 메시지 생성
     public ResponseEntity<CheerResponse> create(@Valid @RequestBody CheerRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(cheerService.create(req));
-    }
+    }*/
 
     @Operation(summary = "응원 메시지 조회", description = "{storyId}의 응원 메시지를 조회합니다.")
     @GetMapping("/story/{storyId}")
