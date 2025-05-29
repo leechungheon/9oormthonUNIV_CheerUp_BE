@@ -163,8 +163,7 @@ public class UserController {
                         <p><strong>이메일:</strong> %s</p>
                         <p><strong>사용자명:</strong> %s</p>
                     </div>
-                    <button class="logout-btn" onclick="logout()">일반 로그아웃</button>
-                    <button class="logout-btn" onclick="logoutComplete()" style="margin-left: 10px; background: #28a745;">완전 로그아웃</button>
+                    <button class="logout-btn" onclick="logout()">로그아웃</button>
                 </div>
                 <script>
                     function logout() {
@@ -177,16 +176,6 @@ public class UserController {
                             }
                         });
                     }
-                    
-                    function logoutComplete() {
-                        fetch('/api/users/logout-complete', {
-                            method: 'POST',
-                            credentials: 'include'
-                        }).then(response => {
-                            // 네이버 로그아웃 페이지로 리다이렉트됨
-                            window.location.reload();
-                        });
-                    }
                 </script>
             </body>
             </html>
@@ -197,8 +186,8 @@ public class UserController {
             .body(html);
     }
 
-    /*
-      로그아웃 처리
+    /**
+     * 로그아웃 처리
      */
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletResponse response) {
@@ -210,23 +199,6 @@ public class UserController {
         response.addCookie(cookie);
         
         return ResponseEntity.ok("로그아웃 완료");
-    }
-
-    /**
-     * 완전 로그아웃 처리 (네이버 세션도 함께 종료)
-     */
-    @PostMapping("/logout-complete")
-    public void logoutComplete(HttpServletResponse response) throws IOException {
-        // JWT 토큰 쿠키 삭제
-        Cookie cookie = new Cookie("token", null);
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        response.addCookie(cookie);
-        
-        // 네이버 로그아웃 URL로 리다이렉트
-        String naverLogoutUrl = "https://nid.naver.com/nidlogin.logout?returl=http://localhost:8080/api/users/home";
-        response.sendRedirect(naverLogoutUrl);
     }
 
     /**
