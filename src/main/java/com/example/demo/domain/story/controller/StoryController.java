@@ -33,49 +33,45 @@ public class StoryController {
 
     @Operation(summary = "전체 응원함 조회")
     @GetMapping
-    public ResponseEntity<List<StoryResponse>> findAll() {
-        return ResponseEntity.ok(storyService.findAll());
+    public ApiResponse<List<StoryResponse>> findAll() {
+        return ApiResponse.success(storyService.findAll(), "스토리 전체 조회 성공");
     }
 
     @Operation(summary = "특정 응원함 조회", description = "{id}의 응원함을 조회합니다.")
-    @GetMapping("/{id}")
-    public ResponseEntity<StoryResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(storyService.findById(id));
+    @GetMapping("/{storyId}")
+    public ApiResponse<StoryResponse> getStoryById(@PathVariable Long storyId) {
+        StoryResponse foundStory = storyService.getStoryById(storyId);
+        return ApiResponse.success(foundStory, "스토리 단건 조회 성공");
     }
 
     @Operation(summary = "응원함 수정")
     @PutMapping("/{id}")
-    public ResponseEntity<StoryResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody StoryRequest req) {
-        return ResponseEntity.ok(storyService.update(id, req));
+    public ApiResponse<StoryResponse> update(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal, @RequestBody @Valid StoryRequest req) {
+        return ApiResponse.success(storyService.update(id, principal, req), "스토리 수정 성공");
     }
 
     @Operation(summary = "응원함 삭제")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        storyService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ApiResponse<Void> delete(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal) {
+        storyService.delete(id, principal);
+        return ApiResponse.success(null, "스토리 삭제 성공");
     }
 
-    @Operation(summary = "응원함 랜덤 조회", description = "응원함을 랜덤으로 5개 조회합니다.")
+    @Operation(summary = "랜덤 응원함 조회")
     @GetMapping("/random")
-    public ResponseEntity<List<StoryResponse>> random(
-            @RequestParam(defaultValue = "5") int size) {
-        return ResponseEntity.ok(storyService.random(size));
+    public ApiResponse<List<StoryResponse>> random(@RequestParam(defaultValue = "5") int size) {
+        return ApiResponse.success(storyService.random(size), "랜덤 스토리 조회 성공");
     }
 
     @Operation(summary = "인기 응원함 조회", description = "인기 응원함을 10개 조회합니다.")
     @GetMapping("/popular")
-    public ResponseEntity<List<StoryResponse>> popular(
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(storyService.popular(size));
+    public ApiResponse<List<StoryResponse>> popular(@RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(storyService.popular(size), "인기 스토리 조회 성공");
     }
 
-    @Operation(summary = "특정 사용자의 사연목록 조회", description = "수정필요.")
+    @Operation(summary = "내 응원함 목록 조회")
     @GetMapping("/my")
-    public ResponseEntity<List<StoryResponse>> myStories(
-            @RequestParam Long userNumber) {
-        return ResponseEntity.ok(storyService.myStories(userNumber));
+    public ApiResponse<List<StoryResponse>> myStories(@AuthenticationPrincipal PrincipalDetails principal) {
+        return ApiResponse.success(storyService.myStories(principal), "내 스토리 목록 조회 성공");
     }
 }

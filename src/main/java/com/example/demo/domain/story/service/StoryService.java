@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service // 서비스 계층 선언
@@ -62,24 +63,38 @@ public class StoryService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // ID로 사연 단건 조회
-    public StoryResponse findById(Long id) {
-        return storyRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사연이 없습니다."));
+    @Transactional(readOnly = true) // ID로 사연 단건 조회 (인증 없음)
+    public StoryResponse getStoryById(Long storyId) {
+        Story story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+        return toDto(story);
     }
 
     @Transactional // 사연 수정
-    public StoryResponse update(Long id, StoryRequest req) {
+    public StoryResponse update(Long id, PrincipalDetails principal, StoryRequest req) {
+        User currentUser = principal.getUser();
         Story story = storyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사연이 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+
+        if (!Objects.equals(story.getUser().getId(), currentUser.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
         story.setContent(req.getContent());
         return toDto(story);
     }
 
     @Transactional // 사연 삭제
-    public void delete(Long id) {
-        storyRepository.deleteById(id);
+    public void delete(Long id, PrincipalDetails principal) {
+        User currentUser = principal.getUser();
+        Story story = storyRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+
+        if (!Objects.equals(story.getUser().getId(), currentUser.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        storyRepository.delete(story);
     }
 
     @Transactional(readOnly = true) // 랜덤 사연 N개 조회
@@ -97,8 +112,9 @@ public class StoryService {
     }
 
     @Transactional(readOnly = true) // 특정 사용자의 사연 목록 조회
-    public List<StoryResponse> myStories(Long userId) {
-        return storyRepository.findByUserId(userId).stream()
+    public List<StoryResponse> myStories(PrincipalDetails principal) {
+        User currentUser = principal.getUser();
+        return storyRepository.findByUserId(currentUser.getId()).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
