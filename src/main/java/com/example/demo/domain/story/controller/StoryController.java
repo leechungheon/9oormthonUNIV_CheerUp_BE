@@ -33,8 +33,8 @@ public class StoryController {
 
     @Operation(summary = "전체 응원함 조회")
     @GetMapping
-    public ResponseEntity<List<StoryResponse>> findAll() {
-        return ResponseEntity.ok(storyService.findAll());
+    public ApiResponse<List<StoryResponse>> findAll() {
+        return ApiResponse.success(storyService.findAll(), "스토리 전체 조회 성공");
     }
 
     @Operation(summary = "특정 응원함 조회", description = "{id}의 응원함을 조회합니다.")
