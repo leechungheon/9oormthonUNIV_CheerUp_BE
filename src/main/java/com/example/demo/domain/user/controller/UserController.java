@@ -220,7 +220,7 @@ public class UserController {
         return ResponseEntity.ok()
             .header("Content-Type", "text/html; charset=UTF-8")
             .body(html);
-    }    
+    }      
     /*
         로그아웃 처리 - OAuth 제공자별로 세션 종료
      */
@@ -239,21 +239,21 @@ public class UserController {
             String logoutUrl = getProviderLogoutUrl(provider);
             
             if (logoutUrl != null) {
+                // OAuth 제공자의 로그아웃 페이지로 리다이렉트하여 세션 종료
                 response.sendRedirect(logoutUrl);
                 return null; // 리다이렉트 시에는 null 반환
             }
         }
         
-        // 일반 로그아웃 (OAuth가 아닌 경우)
-        response.sendRedirect("/api/users/home");
+        // 일반 로그아웃 (OAuth가 아닌 경우) - 로그인 페이지로 리다이렉트
+        response.sendRedirect("/api/users/login");
         return null;
     }
-    
-    /**
+      /**
      * OAuth 제공자별 로그아웃 URL 반환
      */
     private String getProviderLogoutUrl(String provider) {
-        String homeUrl = "http://localhost:8080/api/users/home";
+        String homeUrl = "http://localhost:8080/api/users/login";
         
         return switch (provider) {
             case "google" -> "https://accounts.google.com/logout?continue=" + homeUrl;

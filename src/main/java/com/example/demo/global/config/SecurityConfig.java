@@ -40,14 +40,12 @@ public class SecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())            .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
-                .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
-            ).logout(logout -> logout
+                .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))).logout(logout -> logout
                 .logoutUrl("/api/users/logout")
                 .deleteCookies("token")
-                .logoutSuccessUrl("/api/users/home")
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    response.setStatus(HttpServletResponse.SC_OK);
-                })            )
+                .logoutSuccessUrl("/api/users/login")
+                .permitAll()
+            )
             // 로그인 요청 처리 필터
             .addFilter(new JwtAuthenticationFilter(authMgr, jwtTokenProvider))
             // JWT 검증 및 권한 설정 필터
