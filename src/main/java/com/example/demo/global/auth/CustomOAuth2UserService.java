@@ -45,15 +45,14 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
             // 구글의 경우 기존 로직
             email = (String) attributes.get("email");
             name = (String) attributes.get("name");
-        }
-
-        User user = userRepository.findByEmail(email)
+        }        User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     User newUser = User.builder()
                             .email(email)
                             .username(name)
                             .password("")
                             .role("ROLE_USER")
+                            .provider(registrationId) // OAuth 제공자 정보 저장
                             .build();
                     return userRepository.save(newUser);
                 });

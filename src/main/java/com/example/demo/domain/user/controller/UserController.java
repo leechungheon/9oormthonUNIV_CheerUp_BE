@@ -63,6 +63,8 @@ public class UserController {
                     .google-btn:hover { background: #3367d6; }
                     .naver-btn { background: #03c75a; color: white; }
                     .naver-btn:hover { background: #02b051; }
+                    .kakao-btn { background: #fee500; color: #000; }
+                    .kakao-btn:hover { background: #fdd835; }
                 </style>
             </head>
             <body>
@@ -74,6 +76,9 @@ public class UserController {
                     </div>
                     <div>
                         <a href="/oauth2/authorization/naver" class="login-btn naver-btn">네이버로 로그인</a>
+                    </div>
+                    <div>
+                        <a href="/oauth2/authorization/kakao" class="login-btn kakao-btn">카카오로 로그인</a>
                     </div>
                 </div>
             </body>
@@ -91,7 +96,7 @@ public class UserController {
             response.sendRedirect("/api/users/teststatelogin");
             return null;
         }
-        return "홈페이지 - 로그인이 필요합니다. <a href='/oauth2/authorization/google'>Google로 로그인</a> | <a href='/oauth2/authorization/naver'>네이버로 로그인</a>";
+        return "홈페이지 - 로그인이 필요합니다. <a href='/oauth2/authorization/google'>Google로 로그인</a> | <a href='/oauth2/authorization/naver'>네이버로 로그인</a> | <a href='/oauth2/authorization/kakao'>카카오로 로그인</a>";
     }
 
     @GetMapping("/oauth2/google")
@@ -116,6 +121,17 @@ public class UserController {
         response.sendRedirect("/oauth2/authorization/naver");
     }
 
+    @GetMapping("/oauth2/kakao")
+    public void redirectToKakao(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
+        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
+        if (principal != null) {
+            response.sendRedirect("/api/users/teststatelogin");
+            return;
+        }
+        // Kakao OAuth2 인증 페이지로 리다이렉트
+        response.sendRedirect("/oauth2/authorization/kakao");
+    }
+
     @Operation(summary = "회원가입 요청 처리")
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@Valid @RequestBody RegisterRequest request) {
@@ -128,7 +144,8 @@ public class UserController {
     public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
         String token = userService.login(request);
         return ResponseEntity.ok(token);
-    }    /**
+    }    
+    /*
      * 로그인 상태 확인용 엔드포인트 - HTML 페이지 형태로 응답
      */
     @GetMapping("/teststatelogin")
@@ -136,6 +153,7 @@ public class UserController {
         Long userId = principal.getUser().getId();
         String email = principal.getUser().getEmail();
         String username = principal.getUser().getUsername();
+        String provider = principal.getUser().getProvider() != null ? principal.getUser().getProvider() : "일반";
         
         String html = """
             <!DOCTYPE html>
@@ -150,8 +168,21 @@ public class UserController {
                     .logout-btn { 
                         background: #dc3545; color: white; padding: 10px 20px; 
                         border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
+                        margin-right: 10px;
                     }
                     .logout-btn:hover { background: #c82333; }
+                    .provider-badge {
+                        display: inline-block;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        font-weight: bold;
+                        color: white;
+                    }
+                    .google { background: #4285f4; }
+                    .naver { background: #03c75a; }
+                    .kakao { background: #fee500; color: #000; }
+                    .normal { background: #6c757d; }
                 </style>
             </head>
             <body>
@@ -162,8 +193,10 @@ public class UserController {
                         <p><strong>사용자 ID:</strong> %d</p>
                         <p><strong>이메일:</strong> %s</p>
                         <p><strong>사용자명:</strong> %s</p>
+                        <p><strong>로그인 제공자:</strong> <span class="provider-badge %s">%s</span></p>
                     </div>
                     <button class="logout-btn" onclick="logout()">로그아웃</button>
+                    <button class="logout-btn" onclick="goHome()" style="background: #28a745;">홈으로</button>
                 </div>
                 <script>
                     function logout() {
@@ -171,26 +204,28 @@ public class UserController {
                             method: 'POST',
                             credentials: 'include'
                         }).then(response => {
-                            if (response.ok) {
-                                window.location.href = '/api/users/home';
-                            }
+                            // 서버에서 리다이렉트 처리
+                            window.location.reload();
                         });
+                    }
+                    
+                    function goHome() {
+                        window.location.href = '/api/users/home';
                     }
                 </script>
             </body>
             </html>
-            """.formatted(userId, email, username);
+            """.formatted(userId, email, username, provider.toLowerCase(), provider.toUpperCase());
         
         return ResponseEntity.ok()
             .header("Content-Type", "text/html; charset=UTF-8")
             .body(html);
-    }
-
-    /**
-     * 로그아웃 처리
+    }    
+    /*
+        로그아웃 처리 - OAuth 제공자별로 세션 종료
      */
     @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletResponse response) {
+    public ResponseEntity<String> logout(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
         // JWT 토큰 쿠키 삭제
         Cookie cookie = new Cookie("token", null);
         cookie.setMaxAge(0);
@@ -198,7 +233,34 @@ public class UserController {
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
         
-        return ResponseEntity.ok("로그아웃 완료");
+        // OAuth 제공자별 로그아웃 처리
+        if (principal != null && principal.getUser().getProvider() != null) {
+            String provider = principal.getUser().getProvider().toLowerCase();
+            String logoutUrl = getProviderLogoutUrl(provider);
+            
+            if (logoutUrl != null) {
+                response.sendRedirect(logoutUrl);
+                return null; // 리다이렉트 시에는 null 반환
+            }
+        }
+        
+        // 일반 로그아웃 (OAuth가 아닌 경우)
+        response.sendRedirect("/api/users/home");
+        return null;
+    }
+    
+    /**
+     * OAuth 제공자별 로그아웃 URL 반환
+     */
+    private String getProviderLogoutUrl(String provider) {
+        String homeUrl = "http://localhost:8080/api/users/home";
+        
+        return switch (provider) {
+            case "google" -> "https://accounts.google.com/logout?continue=" + homeUrl;
+            case "naver" -> "https://nid.naver.com/nidlogin.logout?returl=" + homeUrl;
+            case "kakao" -> "https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_CLIENT_ID}&logout_redirect_uri=" + homeUrl;
+            default -> null;
+        };
     }
 
     /**
