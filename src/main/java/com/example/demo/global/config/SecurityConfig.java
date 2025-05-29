@@ -1,5 +1,6 @@
 package com.example.demo.global.config;
 
+import com.example.demo.domain.user.repository.UserRepository;
 import com.example.demo.global.auth.CustomOAuth2UserService;
 import com.example.demo.global.auth.OAuth2SuccessHandler;
 import com.example.demo.global.jwt.JwtAuthenticationFilter;
@@ -23,6 +24,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
@@ -40,16 +42,11 @@ public class SecurityConfig {
             .httpBasic(httpBasic -> httpBasic.disable())            .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 .successHandler(oAuth2SuccessHandler)
-                .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))).logout(logout -> logout
-                .logoutUrl("/api/users/logout")
-                .deleteCookies("token")
-                .logoutSuccessUrl("/api/users/login")
-                .permitAll()
-            )
-            // 로그인 요청 처리 필터
+                .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
+            )            // 로그인 요청 처리 필터
             .addFilter(new JwtAuthenticationFilter(authMgr, jwtTokenProvider))
             // JWT 검증 및 권한 설정 필터
-            .addFilterAfter(new JwtAuthorizationFilter(jwtTokenProvider), JwtAuthenticationFilter.class)
+            .addFilterAfter(new JwtAuthorizationFilter(jwtTokenProvider, userRepository), JwtAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth                // OAuth2 요청·콜백, 테스트 페이지 및 Swagger/OpenAPI 허용
                 .requestMatchers(
                     "/oauth2/**",

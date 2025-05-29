@@ -147,13 +147,15 @@ public class UserController {
     }    
     /*
      * 로그인 상태 확인용 엔드포인트 - HTML 페이지 형태로 응답
-     */
-    @GetMapping("/teststatelogin")
+     */    @GetMapping("/teststatelogin")
     public ResponseEntity<String> testStateLogin(@AuthenticationPrincipal PrincipalDetails principal) {
         Long userId = principal.getUser().getId();
         String email = principal.getUser().getEmail();
         String username = principal.getUser().getUsername();
         String provider = principal.getUser().getProvider() != null ? principal.getUser().getProvider() : "일반";
+        
+        // 로그 추가
+        log.info("사용자 정보 - ID: {}, Email: {}, Provider: {}", userId, email, principal.getUser().getProvider());
         
         String html = """
             <!DOCTYPE html>
@@ -196,7 +198,6 @@ public class UserController {
                         <p><strong>로그인 제공자:</strong> <span class="provider-badge %s">%s</span></p>
                     </div>
                     <button class="logout-btn" onclick="logout()">로그아웃</button>
-                    <button class="logout-btn" onclick="goHome()" style="background: #28a745;">홈으로</button>
                 </div>
                 <script>
                     function logout() {
@@ -204,13 +205,14 @@ public class UserController {
                             method: 'POST',
                             credentials: 'include'
                         }).then(response => {
-                            // 서버에서 리다이렉트 처리
-                            window.location.reload();
+                            if (response.redirected) {
+                                window.location.href = response.url;
+                            } else {
+                                window.location.href = '/api/users/login';
+                            }
+                        }).catch(() => {
+                            window.location.href = '/api/users/login';
                         });
-                    }
-                    
-                    function goHome() {
-                        window.location.href = '/api/users/home';
                     }
                 </script>
             </body>
@@ -287,6 +289,41 @@ public class UserController {
             return ResponseEntity.ok("Test JWT cookie set. Try accessing /api/users/teststatelogin");
         } catch (Exception e) {
             log.error("Error creating test cookie", e);
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 기존 사용자의 provider 정보 업데이트 테스트용 엔드포인트
+     */
+    @GetMapping("/update-test-provider")
+    public ResponseEntity<String> updateTestProvider(@RequestParam(defaultValue = "google") String provider) {
+        try {
+            // 테스트용 사용자 조회 및 provider 업데이트
+            userService.updateUserProvider("test@test.com", provider);
+            return ResponseEntity.ok("Test user provider updated to: " + provider);
+        } catch (Exception e) {
+            log.error("Error updating test user provider", e);
+            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 데이터베이스의 사용자 정보 확인용 엔드포인트
+     */
+    @GetMapping("/debug-user/{email}")
+    public ResponseEntity<String> debugUser(@PathVariable String email) {
+        try {
+            // 이메일로 사용자 조회
+            User user = userService.findByEmail(email);
+            String info = String.format(
+                "사용자 정보 - ID: %d, Email: %s, Username: %s, Provider: %s", 
+                user.getId(), user.getEmail(), user.getUsername(), user.getProvider()
+            );
+            log.info(info);
+            return ResponseEntity.ok(info);
+        } catch (Exception e) {
+            log.error("Error debugging user", e);
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
