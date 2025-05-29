@@ -112,8 +112,9 @@ public class StoryService {
     }
 
     @Transactional(readOnly = true) // 특정 사용자의 사연 목록 조회
-    public List<StoryResponse> myStories(Long userId) {
-        return storyRepository.findByUserId(userId).stream()
+    public List<StoryResponse> myStories(PrincipalDetails principal) {
+        User currentUser = principal.getUser();
+        return storyRepository.findByUserId(currentUser.getId()).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }

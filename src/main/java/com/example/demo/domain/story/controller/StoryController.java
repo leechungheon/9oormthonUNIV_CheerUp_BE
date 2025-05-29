@@ -69,10 +69,9 @@ public class StoryController {
         return ApiResponse.success(storyService.popular(size), "인기 스토리 조회 성공");
     }
 
-    @Operation(summary = "특정 사용자의 사연목록 조회", description = "수정필요.")
+    @Operation(summary = "내 응원함 목록 조회")
     @GetMapping("/my")
-    public ResponseEntity<List<StoryResponse>> myStories(
-            @RequestParam Long userNumber) {
-        return ResponseEntity.ok(storyService.myStories(userNumber));
+    public ApiResponse<List<StoryResponse>> myStories(@AuthenticationPrincipal PrincipalDetails principal) {
+        return ApiResponse.success(storyService.myStories(principal), "내 스토리 목록 조회 성공");
     }
 }
