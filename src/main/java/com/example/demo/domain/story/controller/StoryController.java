@@ -65,9 +65,8 @@ public class StoryController {
 
     @Operation(summary = "인기 응원함 조회", description = "인기 응원함을 10개 조회합니다.")
     @GetMapping("/popular")
-    public ResponseEntity<List<StoryResponse>> popular(
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(storyService.popular(size));
+    public ApiResponse<List<StoryResponse>> popular(@RequestParam(defaultValue = "10") int size) {
+        return ApiResponse.success(storyService.popular(size), "인기 스토리 조회 성공");
     }
 
     @Operation(summary = "특정 사용자의 사연목록 조회", description = "수정필요.")
