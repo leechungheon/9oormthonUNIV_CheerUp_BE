@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service // 서비스 계층 선언
@@ -62,11 +63,11 @@ public class StoryService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // ID로 사연 단건 조회
-    public StoryResponse findById(Long id) {
-        return storyRepository.findById(id)
-                .map(this::toDto)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사연이 없습니다."));
+    @Transactional(readOnly = true) // ID로 사연 단건 조회 (인증 없음)
+    public StoryResponse getStoryById(Long storyId) {
+        Story story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+        return toDto(story);
     }
 
     @Transactional // 사연 수정
