@@ -45,8 +45,7 @@ public class UserController {
             response.sendRedirect("/api/users/teststatelogin");
             return null;
         }
-        
-        String html = """
+          String html = """
             <!DOCTYPE html>
             <html>
             <head>
@@ -56,18 +55,26 @@ public class UserController {
                     body { font-family: Arial, sans-serif; padding: 20px; }
                     .container { max-width: 400px; margin: 0 auto; text-align: center; }
                     .login-btn { 
-                        background: #4285f4; color: white; padding: 12px 24px; 
+                        padding: 12px 24px; 
                         border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
-                        text-decoration: none; display: inline-block;
+                        text-decoration: none; display: inline-block; margin: 5px;
                     }
-                    .login-btn:hover { background: #3367d6; }
+                    .google-btn { background: #4285f4; color: white; }
+                    .google-btn:hover { background: #3367d6; }
+                    .naver-btn { background: #03c75a; color: white; }
+                    .naver-btn:hover { background: #02b051; }
                 </style>
             </head>
             <body>
                 <div class="container">
                     <h1>로그인</h1>
-                    <p>Google 계정으로 로그인하세요.</p>
-                    <a href="/oauth2/authorization/google" class="login-btn">Google로 로그인</a>
+                    <p>소셜 계정으로 로그인하세요.</p>
+                    <div>
+                        <a href="/oauth2/authorization/google" class="login-btn google-btn">Google로 로그인</a>
+                    </div>
+                    <div>
+                        <a href="/oauth2/authorization/naver" class="login-btn naver-btn">네이버로 로그인</a>
+                    </div>
                 </div>
             </body>
             </html>
@@ -76,14 +83,15 @@ public class UserController {
         return ResponseEntity.ok()
             .header("Content-Type", "text/html; charset=UTF-8")
             .body(html);
-    }@GetMapping("/home")
+    }
+    @GetMapping("/home")
     public String home(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
         // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
         if (principal != null) {
             response.sendRedirect("/api/users/teststatelogin");
             return null;
         }
-        return "홈페이지 - 로그인이 필요합니다. <a href='/oauth2/authorization/google'>Google로 로그인</a>";
+        return "홈페이지 - 로그인이 필요합니다. <a href='/oauth2/authorization/google'>Google로 로그인</a> | <a href='/oauth2/authorization/naver'>네이버로 로그인</a>";
     }
 
     @GetMapping("/oauth2/google")
@@ -95,6 +103,17 @@ public class UserController {
         }
         // Google OAuth2 인증 페이지로 리다이렉트
         response.sendRedirect("/oauth2/authorization/google");
+    }
+
+    @GetMapping("/oauth2/naver")
+    public void redirectToNaver(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
+        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
+        if (principal != null) {
+            response.sendRedirect("/api/users/teststatelogin");
+            return;
+        }
+        // Naver OAuth2 인증 페이지로 리다이렉트
+        response.sendRedirect("/oauth2/authorization/naver");
     }
 
     @Operation(summary = "회원가입 요청 처리")

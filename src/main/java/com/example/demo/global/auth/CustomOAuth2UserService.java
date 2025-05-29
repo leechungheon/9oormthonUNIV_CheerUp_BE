@@ -29,8 +29,23 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Map<String, Object> attributes = oauth2User.getAttributes();
         String userNameAttributeName = userRequest.getClientRegistration()
-                .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
+                .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
+        
+        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+        String email;
+        String name;
+        
+        if ("naver".equals(registrationId)) {
+            // 네이버의 경우 response 객체 안에 정보가 있음
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+            email = (String) response.get("email");
+            name = (String) response.get("name");
+        } else {
+            // 구글의 경우 기존 로직
+            email = (String) attributes.get("email");
+            name = (String) attributes.get("name");
+        }
 
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
