@@ -75,6 +75,13 @@ jobs:
           username: ${{ secrets.EC2_USER }}    # 보통 'ec2-user'
           key_path: ec2_key.pem                # 디코딩된 키 파일 경로 (key 대신 key_path 사용)
           script: |
+            echo "🔐 Logging in to ECR..."
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+            echo "📥 Pulling Docker image..."
             docker pull $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+            echo "🚀 Running Docker Compose..."
             docker compose -f /home/ubuntu/cheerup-server/compose.yml up -d
+          
           
