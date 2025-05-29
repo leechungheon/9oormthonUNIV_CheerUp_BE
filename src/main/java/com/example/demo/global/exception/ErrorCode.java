@@ -27,7 +27,7 @@ public enum ErrorCode {
 
     // 데이터베이스 및 서버 관련
     DATA_ACCESS_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "데이터베이스 처리 중 오류가 발생했습니다."),
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "백엔드 서버 오류가 발생했습니다."),
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "백엔드 서버 오류가 발생했습니다.."),
     SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "서비스를 사용할 수 없습니다. 잠시 후 다시 시도해주세요.");
 
     private final HttpStatus status; // HTTP 상태 코드

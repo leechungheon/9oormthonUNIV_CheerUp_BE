@@ -36,6 +36,7 @@ public class Story {
     private User user;
 
     @OneToMany(mappedBy = "story", cascade = CascadeType.ALL, orphanRemoval = true) // 응원 메시지와 1:N 관계
+    @Builder.Default
     private List<CheerMessage> cheerMessages = new ArrayList<>(); // 연결된 응원 메시지 목록
 
     @ManyToOne(fetch = FetchType.LAZY) // 카테고리와 다대일 관계

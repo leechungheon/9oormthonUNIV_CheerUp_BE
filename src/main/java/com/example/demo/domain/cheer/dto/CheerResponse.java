@@ -11,4 +11,5 @@ public class CheerResponse {
     private String content; // 응원 메시지 내용
     private LocalDateTime createdAt; // 생성 시각
     private String category; // 카테고리 (무조건 응원함 등)
+
 }

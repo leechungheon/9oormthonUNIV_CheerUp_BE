@@ -1,6 +1,8 @@
 package com.example.demo.domain.story.service;
 
+import com.example.demo.domain.category.dto.CategoryResponse;
 import com.example.demo.domain.category.repository.CategoryRepository;
+import com.example.demo.domain.cheer.dto.CheerResponse;
 import com.example.demo.domain.story.dto.*;
 import com.example.demo.domain.story.entity.Story;
 import com.example.demo.domain.story.repository.StoryRepository;
@@ -26,7 +28,7 @@ public class StoryService {
     private final StoryRepository storyRepository;
     private final CategoryRepository categoryRepository; // 카테고리 리포지토리 의존성 주입
 
-    @Transactional // 사연 생성
+    @Transactional // 응원함 생성
     public StoryResponse create(PrincipalDetails principal, StoryRequest req) {
         try {
             User user = principal.getUser(); // 로그인한 유저 객체 가져오기
@@ -56,35 +58,54 @@ public class StoryService {
         }
     }
 
-    @Transactional(readOnly = true) // 전체 사연 조회
+    @Transactional(readOnly = true) // 전체 응원함 조회
     public List<StoryResponse> findAll() {
         return storyRepository.findAll().stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // ID로 사연 단건 조회 (인증 없음)
+    @Transactional(readOnly = true) // ID로 응원함 단건 조회 (인증 없음)
     public StoryResponse getStoryById(Long storyId) {
         Story story = storyRepository.findById(storyId)
                 .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
         return toDto(story);
     }
 
-    @Transactional // 사연 수정
+    @Transactional // 응원함 수정
     public StoryResponse update(Long id, PrincipalDetails principal, StoryRequest req) {
         User currentUser = principal.getUser();
+        if (currentUser == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안되어 있다면
+        }
+
         Story story = storyRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
 
         if (!Objects.equals(story.getUser().getId(), currentUser.getId())) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
+            throw new CustomException(ErrorCode.FORBIDDEN); // 다른 사용자의 스토리
         }
 
-        story.setContent(req.getContent());
+        // 입력 값 유효성 검증
+        if (req.getContent() == null || req.getContent().trim().isEmpty()) {
+            throw new CustomException(ErrorCode.INVALID_CONTENT);
+        }
+
+        /*if (req.getContent().length() > 1000) {
+            throw new CustomException(ErrorCode.INVALID_INPUT, "내용이 너무 깁니다.");
+        }*/
+
+        try {
+            story.setContent(req.getContent());
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
         return toDto(story);
     }
 
-    @Transactional // 사연 삭제
+
+    @Transactional // 응원함 삭제
     public void delete(Long id, PrincipalDetails principal) {
         User currentUser = principal.getUser();
         Story story = storyRepository.findById(id)
@@ -97,21 +118,21 @@ public class StoryService {
         storyRepository.delete(story);
     }
 
-    @Transactional(readOnly = true) // 랜덤 사연 N개 조회
+    @Transactional(readOnly = true) // 랜덤 응원함 N개 조회
     public List<StoryResponse> random(int size) {
         return storyRepository.findRandomStories(size).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // 인기 사연 N개 조회 (응원 수 기준)
+    @Transactional(readOnly = true) // 인기 응원함 N개 조회 (응원메시지 수 기준)
     public List<StoryResponse> popular(int size) {
         return storyRepository.findPopularStories(PageRequest.of(0, size)).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true) // 특정 사용자의 사연 목록 조회
+    @Transactional(readOnly = true) // 나의 응원함 목록 조회
     public List<StoryResponse> myStories(PrincipalDetails principal) {
         User currentUser = principal.getUser();
         return storyRepository.findByUserId(currentUser.getId()).stream()
@@ -124,8 +145,11 @@ public class StoryService {
         return StoryResponse.builder()
                 .content(s.getContent())
                 .createdAt(s.getCreatedAt())
-                .cheerMessages(s.getCheerMessages())
-                .category(s.getCategory())
+                //.cheerMessages(s.getCheerMessages())
+                //.category(s.getCategory())
+                /* 주석처리 이유 -> LAZY 로딩 설정되어 있을 경우,
+                    트랜잭션 밖에서 getCheerMessages()나 getCategory()에 접근하면 예외가 발생*/
                 .build();
     }
 }
+

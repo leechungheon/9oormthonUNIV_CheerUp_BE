@@ -26,7 +26,8 @@ public class StoryController {
 
     @Operation(summary = "응원함 생성")
     @PostMapping("/create")
-    public ApiResponse<StoryResponse> createStory(@AuthenticationPrincipal PrincipalDetails principal, @RequestBody @Valid StoryRequest story) {
+    public ApiResponse<StoryResponse> createStory(@AuthenticationPrincipal PrincipalDetails principal,
+                                                  @RequestBody @Valid StoryRequest story) {
         StoryResponse createdStory=storyService.create(principal,story);
         return ApiResponse.success(createdStory, "스토리 생성 성공");
     }

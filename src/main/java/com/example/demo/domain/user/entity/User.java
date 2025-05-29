@@ -34,6 +34,7 @@ public class User {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     //mappedBy = "user"는 Story 엔티티의 user 필드가 외래키의 주인임을 의미
     private List<Story> stories = new ArrayList<>();
 
