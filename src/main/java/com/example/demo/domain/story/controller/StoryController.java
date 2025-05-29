@@ -57,11 +57,10 @@ public class StoryController {
         return ApiResponse.success(null, "스토리 삭제 성공");
     }
 
-    @Operation(summary = "응원함 랜덤 조회", description = "응원함을 랜덤으로 5개 조회합니다.")
+    @Operation(summary = "랜덤 응원함 조회")
     @GetMapping("/random")
-    public ResponseEntity<List<StoryResponse>> random(
-            @RequestParam(defaultValue = "5") int size) {
-        return ResponseEntity.ok(storyService.random(size));
+    public ApiResponse<List<StoryResponse>> random(@RequestParam(defaultValue = "5") int size) {
+        return ApiResponse.success(storyService.random(size), "랜덤 스토리 조회 성공");
     }
 
     @Operation(summary = "인기 응원함 조회", description = "인기 응원함을 10개 조회합니다.")
