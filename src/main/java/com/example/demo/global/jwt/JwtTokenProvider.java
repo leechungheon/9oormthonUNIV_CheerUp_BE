@@ -13,6 +13,7 @@ public class JwtTokenProvider {
     public String createToken(User user) {
         return JWT.create()
                 .withSubject(user.getEmail())
+                .withClaim("id", user.getId())
                 .withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.EXPIRATION_TIME))
                 .withClaim("id", user.getId())
                 .withClaim("username", user.getUsername())

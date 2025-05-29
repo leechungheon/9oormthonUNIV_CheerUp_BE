@@ -21,7 +21,29 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://www.googleapis.com/oauth2/v4/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    com.example.demo.global.auth: DEBUG
+    com.example.demo.global.jwt: DEBUG
 
 springdoc:
   swagger-ui:
@@ -29,6 +51,8 @@ springdoc:
     tags-sorter: alpha
     operations-sorter: method
     disable-swagger-default-url: true
+    url: "/api-docs"
+    config-url: "/api-docs/swagger-config"
     display-request-duration: true
     defaultModelsExpandDepth: 2
     defaultModelExpandDepth: 2
