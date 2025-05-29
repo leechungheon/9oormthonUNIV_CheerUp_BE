@@ -85,8 +85,16 @@ public class StoryService {
     }
 
     @Transactional // 사연 삭제
-    public void delete(Long id) {
-        storyRepository.deleteById(id);
+    public void delete(Long id, PrincipalDetails principal) {
+        User currentUser = principal.getUser();
+        Story story = storyRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+
+        if (!Objects.equals(story.getUser().getId(), currentUser.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        storyRepository.delete(story);
     }
 
     @Transactional(readOnly = true) // 랜덤 사연 N개 조회

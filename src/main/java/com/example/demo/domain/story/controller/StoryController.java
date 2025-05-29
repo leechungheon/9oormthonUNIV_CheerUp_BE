@@ -52,9 +52,9 @@ public class StoryController {
 
     @Operation(summary = "응원함 삭제")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        storyService.delete(id);
-        return ResponseEntity.noContent().build();
+    public ApiResponse<Void> delete(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal) {
+        storyService.delete(id, principal);
+        return ApiResponse.success(null, "스토리 삭제 성공");
     }
 
     @Operation(summary = "응원함 랜덤 조회", description = "응원함을 랜덤으로 5개 조회합니다.")
