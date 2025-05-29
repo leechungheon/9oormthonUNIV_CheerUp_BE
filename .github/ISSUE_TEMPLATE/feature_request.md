@@ -1,5 +1,5 @@
 ---
-name: ✨ 기능 제안
+name: ✨ 기능 제안 
 about: 새로운 기능을 제안하거나 개선사항이 있을 경우 작성해주세요.
 title: '[Feature] '
 labels: enhancement
