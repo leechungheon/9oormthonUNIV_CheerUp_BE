@@ -71,9 +71,15 @@ public class StoryService {
     }
 
     @Transactional // 사연 수정
-    public StoryResponse update(Long id, StoryRequest req) {
+    public StoryResponse update(Long id, PrincipalDetails principal, StoryRequest req) {
+        User currentUser = principal.getUser();
         Story story = storyRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사연이 없습니다."));
+                .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+
+        if (!Objects.equals(story.getUser().getId(), currentUser.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
         story.setContent(req.getContent());
         return toDto(story);
     }

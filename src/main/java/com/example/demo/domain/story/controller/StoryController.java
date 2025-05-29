@@ -46,10 +46,8 @@ public class StoryController {
 
     @Operation(summary = "응원함 수정")
     @PutMapping("/{id}")
-    public ResponseEntity<StoryResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody StoryRequest req) {
-        return ResponseEntity.ok(storyService.update(id, req));
+    public ApiResponse<StoryResponse> update(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal, @RequestBody @Valid StoryRequest req) {
+        return ApiResponse.success(storyService.update(id, principal, req), "스토리 수정 성공");
     }
 
     @Operation(summary = "응원함 삭제")
