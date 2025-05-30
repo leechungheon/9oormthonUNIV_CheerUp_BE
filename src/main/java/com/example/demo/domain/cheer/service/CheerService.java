@@ -79,13 +79,13 @@ public class CheerService {
                         .build());
 
         if (limit.getCount() >= 3) {
-            throw new IllegalStateException("하루 응원 조회 제한(3회)을 초과했습니다.");
+            throw new CustomException(ErrorCode.FORBIDDEN); // 하루 3회 초과
         }
 
-        limit.setCount(limit.getCount() + 1);
+        limit.setCount(limit.getCount() + 1); // 횟수 +1
         limitRepository.save(limit);
 
-        CheerMessage cm = cheerRepository.findRandomByCategory(category);
+        CheerMessage cm = cheerRepository.findRandomByCategory(category); // 카테고리에 해당하는 응원 메시지 중 하나 무작위 조회
         return toDto(cm);
     }
 
