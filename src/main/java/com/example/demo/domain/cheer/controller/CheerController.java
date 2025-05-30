@@ -27,8 +27,8 @@ public class CheerController {
     @Operation(summary = "응원 메시지 생성")
     @PostMapping
     public ApiResponse<CheerResponse> create(@AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
-        CheerResponse response = cheerService.create(principal, req);
-        return ApiResponse.success(response, "응원 메시지 생성 성공");
+        CheerResponse createdCheer = cheerService.create(principal, req);
+        return ApiResponse.success(createdCheer, "응원 메시지 생성 성공");
     }
 
     @Operation(summary = "응원 메시지 조회", description = "{storyId}의 응원 메시지를 조회합니다.")
