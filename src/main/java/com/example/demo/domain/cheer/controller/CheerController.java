@@ -57,9 +57,9 @@ public class CheerController {
     }
 
     @Operation(summary = "응원 메시지 삭제")
-    @DeleteMapping("/{id}") // 응원 메시지 삭제
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        cheerService.delete(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> delete(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal) {
+        cheerService.delete(id, principal);
+        return ApiResponse.success("삭제되었습니다.", "응원 메시지 삭제 성공");
     }
 }

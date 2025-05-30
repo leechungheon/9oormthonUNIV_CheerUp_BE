@@ -111,8 +111,17 @@ public class CheerService {
     }
 
     @Transactional // 응원 메시지 삭제
-    public void delete(Long id) {
-        cheerRepository.deleteById(id);
+    public void delete(Long id, PrincipalDetails principal) {
+        User user = principal.getUser();
+
+        CheerMessage cm = cheerRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
+
+        if (!Objects.equals(cm.getUserNumber(), user.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        cheerRepository.delete(cm);
     }
 
     // 엔티티를 DTO로 변환
