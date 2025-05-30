@@ -33,8 +33,8 @@ public class CheerController {
 
     @Operation(summary = "응원 메시지 조회", description = "{storyId}의 응원 메시지를 조회합니다.")
     @GetMapping("/story/{storyId}")
-    public ResponseEntity<List<CheerResponse>> byStory(@PathVariable Long storyId) {
-        return ResponseEntity.ok(cheerService.findByStory(storyId));
+    public ApiResponse<List<CheerResponse>> findByStory(@PathVariable Long storyId) {
+        return ApiResponse.success(cheerService.findByStory(storyId), "응원 메시지 조회 성공");
     }
 
     @Operation(summary = "응원 메시지 조회", description = "카테고리를 기반으로 랜덤 응원 메시지를 조회합니다.(사용자 번호 포함)")
