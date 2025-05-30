@@ -50,11 +50,10 @@ public class CheerController {
     }
 
     @Operation(summary = "응원 메시지 수정")
-    @PutMapping("/{id}") // 응원 메시지 수정
-    public ResponseEntity<CheerResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody CheerRequest req) {
-        return ResponseEntity.ok(cheerService.update(id, req));
+    @PutMapping("/{id}")
+    public ApiResponse<CheerResponse> update(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
+        CheerResponse updatedCheer = cheerService.update(id, principal, req);
+        return ApiResponse.success(updatedCheer, "응원 메시지 수정 성공");
     }
 
     @Operation(summary = "응원 메시지 삭제")

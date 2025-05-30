@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service // 서비스 계층 선언
@@ -89,10 +90,22 @@ public class CheerService {
         return toDto(cm);
     }
 
-    @Transactional // 응원 메시지 내용 수정
-    public CheerResponse update(Long id, CheerRequest req) {
-        var cm = cheerRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 응원 메시지입니다."));
+    @Transactional
+    public CheerResponse update(Long id, PrincipalDetails principal, CheerRequest req) {
+        User user = principal.getUser();
+        if (user == null) throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인하지 않은 사용자
+
+        CheerMessage cm = cheerRepository.findById(id) // 수정할 응원 메시지 조회
+                .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
+
+        if (!Objects.equals(cm.getUserNumber(), user.getId())) { // 본인이 작성한 응원 메시지가 아닌 경우 권한 없음
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        if (req.getContent() == null || req.getContent().trim().isEmpty()) { // 응원 메시지 내용이 비어 있는 경우
+            throw new CustomException(ErrorCode.INVALID_CONTENT);
+        }
+
         cm.setContent(req.getContent());
         return toDto(cm);
     }
