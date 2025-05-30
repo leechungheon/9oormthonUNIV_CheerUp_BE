@@ -2,10 +2,13 @@ package com.example.demo.domain.cheer.controller;
 
 import com.example.demo.domain.cheer.dto.*;
 import com.example.demo.domain.cheer.service.CheerService;
+import com.example.demo.global.auth.PrincipalDetails;
+import com.example.demo.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,12 +24,12 @@ public class CheerController {
 
     private final CheerService cheerService; // 응원 서비스 의존성 주입
 
-    /*@Operation(summary = "응원 메시지 생성")
-    @PostMapping // 응원 메시지 생성
-    public ResponseEntity<CheerResponse> create(@Valid @RequestBody CheerRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(cheerService.create(req));
-    }*/
+    @Operation(summary = "응원 메시지 생성")
+    @PostMapping
+    public ApiResponse<CheerResponse> create(@AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
+        CheerResponse response = cheerService.create(principal, req);
+        return ApiResponse.success(response, "응원 메시지 생성 성공");
+    }
 
     @Operation(summary = "응원 메시지 조회", description = "{storyId}의 응원 메시지를 조회합니다.")
     @GetMapping("/story/{storyId}")
