@@ -27,6 +27,8 @@ public class User {
 
     private String password; // 암호화된 비밀번호
 
+    private String provider; // OAuth 제공자 (google, naver, kakao 등)
+
     @Column(nullable = false)
     private String role; // 사용자 권한 (예: USER, ADMIN)
 
@@ -37,8 +39,6 @@ public class User {
     @Builder.Default
     //mappedBy = "user"는 Story 엔티티의 user 필드가 외래키의 주인임을 의미
     private List<Story> stories = new ArrayList<>();
-
-
     // 생성자 오버로딩
     public User(String email, String username, String password, String role, String profileImageUrl) {
         this.email = email;
@@ -46,5 +46,15 @@ public class User {
         this.password = password;
         this.role = role;
         this.profileImageUrl = profileImageUrl;
+    }
+    
+    // OAuth 제공자를 포함한 생성자
+    public User(String email, String username, String password, String role, String profileImageUrl, String provider) {
+        this.email = email;
+        this.username = username;
+        this.password = password;
+        this.role = role;
+        this.profileImageUrl = profileImageUrl;
+        this.provider = provider;
     }
 }
