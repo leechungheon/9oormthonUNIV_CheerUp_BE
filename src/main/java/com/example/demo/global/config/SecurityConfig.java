@@ -52,12 +52,12 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/api/users/test",
+                        "/api/users/health",
                     "/login",
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
-                    "/api-docs/**",
-                        "/health"
+                    "/api-docs/**"
                 ).permitAll()                // API 엔드포인트 중 회원가입·로그인 또는 홈페이지 공개
                 .requestMatchers(
                     "/api/users/signup",
