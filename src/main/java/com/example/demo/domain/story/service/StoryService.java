@@ -150,7 +150,7 @@ public class StoryService {
     }
 
     // 엔티티를 DTO로 변환
-    private StoryResponse toDto(Story s) {
+    public StoryResponse toDto(Story s) {
         return StoryResponse.builder()
                 .content(s.getContent())
                 .createdAt(s.getCreatedAt())
