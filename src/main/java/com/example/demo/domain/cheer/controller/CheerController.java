@@ -2,10 +2,14 @@ package com.example.demo.domain.cheer.controller;
 
 import com.example.demo.domain.cheer.dto.*;
 import com.example.demo.domain.cheer.service.CheerService;
+import com.example.demo.global.auth.PrincipalDetails;
+import com.example.demo.global.exception.CustomException;
+import com.example.demo.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,39 +25,41 @@ public class CheerController {
 
     private final CheerService cheerService; // 응원 서비스 의존성 주입
 
-    /*@Operation(summary = "응원 메시지 생성")
-    @PostMapping // 응원 메시지 생성
-    public ResponseEntity<CheerResponse> create(@Valid @RequestBody CheerRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(cheerService.create(req));
-    }*/
+    @Operation(summary = "응원 메시지 생성")
+    @PostMapping
+    public ApiResponse<CheerResponse> create(@AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
+        CheerResponse createdCheer = cheerService.create(principal, req);
+        return ApiResponse.success(createdCheer, "응원 메시지 생성 성공");
+    }
 
     @Operation(summary = "응원 메시지 조회", description = "{storyId}의 응원 메시지를 조회합니다.")
     @GetMapping("/story/{storyId}")
-    public ResponseEntity<List<CheerResponse>> byStory(@PathVariable Long storyId) {
-        return ResponseEntity.ok(cheerService.findByStory(storyId));
+    public ApiResponse<List<CheerResponse>> findByStory(@PathVariable Long storyId) {
+        return ApiResponse.success(cheerService.findByStory(storyId), "응원 메시지 조회 성공");
     }
 
-    @Operation(summary = "응원 메시지 조회", description = "카테고리를 기반으로 랜덤 응원 메시지를 조회합니다.(사용자 번호 포함)")
+    @Operation(summary = "랜덤 응원 메시지 조회", description = "카테고리 기반 랜덤 응원 메시지를 하루 3회까지 조회할 수 있습니다.")
     @GetMapping("/random")
-    public ResponseEntity<CheerResponse> random(
-            @RequestParam String category,
-            @RequestParam Long userNumber) {
-        return ResponseEntity.ok(cheerService.randomByCategory(category, userNumber));
+    public ApiResponse<?> randomByCategory(@RequestParam String category, @RequestParam Long userNumber) {
+        try {
+            CheerResponse randomCheer = cheerService.randomByCategory(category, userNumber);
+            return ApiResponse.success(randomCheer, "랜덤 응원 메시지 조회 성공");
+        } catch (CustomException e) {
+            return ApiResponse.error(e.getErrorCode().getMessage());
+        }
     }
 
     @Operation(summary = "응원 메시지 수정")
-    @PutMapping("/{id}") // 응원 메시지 수정
-    public ResponseEntity<CheerResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody CheerRequest req) {
-        return ResponseEntity.ok(cheerService.update(id, req));
+    @PutMapping("/{id}")
+    public ApiResponse<CheerResponse> update(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
+        CheerResponse updatedCheer = cheerService.update(id, principal, req);
+        return ApiResponse.success(updatedCheer, "응원 메시지 수정 성공");
     }
 
     @Operation(summary = "응원 메시지 삭제")
-    @DeleteMapping("/{id}") // 응원 메시지 삭제
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        cheerService.delete(id);
-        return ResponseEntity.noContent().build();
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> delete(@PathVariable Long id, @AuthenticationPrincipal PrincipalDetails principal) {
+        cheerService.delete(id, principal);
+        return ApiResponse.success("삭제되었습니다.", "응원 메시지 삭제 성공");
     }
 }

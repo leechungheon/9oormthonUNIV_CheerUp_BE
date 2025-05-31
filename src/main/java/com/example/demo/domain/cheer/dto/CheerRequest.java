@@ -9,7 +9,10 @@ import lombok.*;
 @AllArgsConstructor // 모든 필드를 매개변수로 받는 생성자 자동 생성
 public class CheerRequest {
 
-    @NotBlank // null, 빈 문자열 허용하지 않음
+    @NotNull
+    private Long storyId; // 연결할 사연의 ID
+
+    @NotBlank(message = "내용을 입력해주세요.")
     private String content; // 응원 메시지 내용
 
     private String category; // 무조건 응원함용 카테고리 (선택값)

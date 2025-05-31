@@ -5,14 +5,21 @@ import com.example.demo.domain.cheer.entity.CheerMessage;
 import com.example.demo.domain.cheer.entity.UserCheerLimit;
 import com.example.demo.domain.cheer.repository.CheerRepository;
 import com.example.demo.domain.cheer.repository.UserCheerLimitRepository;
+import com.example.demo.domain.story.entity.Story;
 import com.example.demo.domain.story.repository.StoryRepository;
+import com.example.demo.domain.user.entity.User;
+import com.example.demo.global.auth.PrincipalDetails;
+import com.example.demo.global.exception.CustomException;
+import com.example.demo.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service // 서비스 계층 선언
@@ -23,22 +30,35 @@ public class CheerService {
     private final StoryRepository storyRepository;
     private final UserCheerLimitRepository limitRepository;
 
-    /*@Transactional // 응원 메시지 생성
-    public CheerResponse create(CheerRequest req) {
-        var story = storyRepository.findById(req.getStoryId())
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사연입니다."));
+    @Transactional
+    public CheerResponse create(PrincipalDetails principal, CheerRequest req) {
+        try {
+            User user = principal.getUser();
+            if (user == null) throw new CustomException(ErrorCode.UNAUTHORIZED);
 
-        CheerMessage cm = CheerMessage.builder()
-                .story(story)
-                .content(req.getContent())
-                .userNumber(req.getUserNumber())
-                .createdAt(LocalDateTime.now())
-                .category(req.getCategory())
-                .build();
+            if (req.getContent() == null || req.getContent().isBlank()) {
+                throw new CustomException(ErrorCode.INVALID_CONTENT);
+            }
 
-        cm = cheerRepository.save(cm);
-        return toDto(cm);
-    }*/
+            Story story = storyRepository.findById(req.getStoryId())
+                    .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
+
+            CheerMessage cm = CheerMessage.builder()
+                    .story(story)
+                    .content(req.getContent())
+                    .userNumber(user.getId()) // 로그인 사용자 ID 사용
+                    .createdAt(LocalDateTime.now())
+                    .category(req.getCategory())
+                    .build();
+
+            cheerRepository.save(cm);
+            return toDto(cm);
+        } catch (DataAccessException e) {
+            throw new CustomException(ErrorCode.DATA_ACCESS_ERROR);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @Transactional(readOnly = true) // 특정 사연의 응원 메시지 전체 조회
     public List<CheerResponse> findByStory(Long storyId) {
@@ -60,27 +80,48 @@ public class CheerService {
                         .build());
 
         if (limit.getCount() >= 3) {
-            throw new IllegalStateException("하루 응원 조회 제한(3회)을 초과했습니다.");
+            throw new CustomException(ErrorCode.FORBIDDEN); // 하루 3회 초과
         }
 
-        limit.setCount(limit.getCount() + 1);
+        limit.setCount(limit.getCount() + 1); // 횟수 +1
         limitRepository.save(limit);
 
-        CheerMessage cm = cheerRepository.findRandomByCategory(category);
+        CheerMessage cm = cheerRepository.findRandomByCategory(category); // 카테고리에 해당하는 응원 메시지 중 하나 무작위 조회
         return toDto(cm);
     }
 
-    @Transactional // 응원 메시지 내용 수정
-    public CheerResponse update(Long id, CheerRequest req) {
-        var cm = cheerRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 응원 메시지입니다."));
+    @Transactional
+    public CheerResponse update(Long id, PrincipalDetails principal, CheerRequest req) {
+        User user = principal.getUser();
+        if (user == null) throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인하지 않은 사용자
+
+        CheerMessage cm = cheerRepository.findById(id) // 수정할 응원 메시지 조회
+                .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
+
+        if (!Objects.equals(cm.getUserNumber(), user.getId())) { // 본인이 작성한 응원 메시지가 아닌 경우 권한 없음
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        if (req.getContent() == null || req.getContent().trim().isEmpty()) { // 응원 메시지 내용이 비어 있는 경우
+            throw new CustomException(ErrorCode.INVALID_CONTENT);
+        }
+
         cm.setContent(req.getContent());
         return toDto(cm);
     }
 
     @Transactional // 응원 메시지 삭제
-    public void delete(Long id) {
-        cheerRepository.deleteById(id);
+    public void delete(Long id, PrincipalDetails principal) {
+        User user = principal.getUser();
+
+        CheerMessage cm = cheerRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
+
+        if (!Objects.equals(cm.getUserNumber(), user.getId())) {
+            throw new CustomException(ErrorCode.FORBIDDEN);
+        }
+
+        cheerRepository.delete(cm);
     }
 
     // 엔티티를 DTO로 변환
