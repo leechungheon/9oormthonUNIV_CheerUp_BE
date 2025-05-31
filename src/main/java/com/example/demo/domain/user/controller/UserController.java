@@ -327,4 +327,11 @@ public class UserController {
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
+    /**
+     * AWS ELB 헬스체크 엔드포인트
+     */
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("OK");
+    }
 }

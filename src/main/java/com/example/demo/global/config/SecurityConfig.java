@@ -56,7 +56,8 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
-                    "/api-docs/**"
+                    "/api-docs/**",
+                        "/health"
                 ).permitAll()                // API 엔드포인트 중 회원가입·로그인 또는 홈페이지 공개
                 .requestMatchers(
                     "/api/users/signup",
