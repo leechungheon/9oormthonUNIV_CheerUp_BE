@@ -147,7 +147,8 @@ public class UserController {
     }    
     /*
      * 로그인 상태 확인용 엔드포인트 - HTML 페이지 형태로 응답
-     */    @GetMapping("/teststatelogin")
+     */
+    @GetMapping("/teststatelogin")
     public ResponseEntity<String> testStateLogin(@AuthenticationPrincipal PrincipalDetails principal) {
         Long userId = principal.getUser().getId();
         String email = principal.getUser().getEmail();
