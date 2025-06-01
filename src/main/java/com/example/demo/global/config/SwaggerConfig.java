@@ -11,27 +11,39 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class SwaggerConfig {
+
     @Bean
     public OpenAPI openAPI() {
+        String jwt = "JWT";
+
+        // JWT 인증 방식 명시
+        SecurityRequirement securityRequirement = new SecurityRequirement().addList(jwt);
+
+        // JWT 보안 구성 요소 설정
+        Components components = new Components().addSecuritySchemes(jwt,
+                new SecurityScheme()
+                        .name(jwt)
+                        .type(SecurityScheme.Type.HTTP)
+                        .scheme("bearer")
+                        .bearerFormat("JWT")
+        );
+
+        // 실제 요청 서버 주소 입력 (배포 주소 or 상대경로 등)
+        Server server = new Server();
+        server.setUrl("https://api.cheer-up.net");
 
         return new OpenAPI()
-                .info(new Info()
-                        .title("CheerUp API")
-                        .description("구름톤 유니브 3조 CheerUp 프로젝트 API 문서")
-                        .version("v1.0.1"))
+                .info(apiInfo())
+                .addSecurityItem(securityRequirement)
+                .components(components)
+                .addServersItem(server);
+    }
 
-                // 현재 도메인 기준으로 API 요청이 나가도록 상대 경로 사용
-                .addServersItem(new Server().url("/"))
-
-                // 보안 설정 추가 (JWT 토큰 인증 방식 명시)
-                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
-
-                // JWT 인증 방식에 대한 세부 설정
-                .components(new Components().addSecuritySchemes("bearerAuth",
-                        new SecurityScheme()
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                ));
+    // API 정보 설정
+    private Info apiInfo() {
+        return new Info()
+                .title("CheerUp API")
+                .description("구름톤 유니브 3조 CheerUp 프로젝트 API 문서")
+                .version("v1.0.0");
     }
 }
