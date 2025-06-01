@@ -255,7 +255,7 @@ public class UserController {
      * OAuth 제공자별 로그아웃 URL 반환
      */
     private String getProviderLogoutUrl(String provider) {
-        String homeUrl = "http://localhost:8080/api/users/login";
+        String homeUrl = "https://api.cheer-up.net/api/users/login";
         
         return switch (provider) {
             case "google" -> "https://accounts.google.com/logout?continue=" + homeUrl;
