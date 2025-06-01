@@ -80,9 +80,7 @@ public class SecurityConfig {
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
                     "/api-docs/**",
-                        "/v3/**"
-                ).permitAll()                // API 엔드포인트 중 회원가입·로그인 또는 홈페이지 공개
-                .requestMatchers(
+                        "/v3/**",
                     "/api/users/signup",
                     "/api/users/login",
                     "/api/users/home",
