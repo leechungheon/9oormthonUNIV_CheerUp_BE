@@ -10,6 +10,7 @@ import java.util.List;
 
 @Entity // JPA 엔티티 매핑
 @Data // Getter, Setter, toString, equals, hashCode 자동 생성
+@Table(name = "user") // 테이블 이름 지정
 @NoArgsConstructor // 기본 생성자 자동 생성
 @AllArgsConstructor // 모든 필드를 매개변수로 받는 생성자 자동 생성
 @Builder // 빌더 패턴 적용
