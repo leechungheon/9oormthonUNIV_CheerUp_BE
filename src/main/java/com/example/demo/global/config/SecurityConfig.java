@@ -56,8 +56,6 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authMgr) throws Exception {
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authMgr, jwtTokenProvider);
-        jwtAuthenticationFilter.setFilterProcessesUrl("/api/users/login"); // ✅ 로그인 URL 설정
         http
                 .cors(Customizer.withDefaults()) // ✅ 이거 추가!
             .csrf(csrf -> csrf.disable())
@@ -73,7 +71,6 @@ public class SecurityConfig {
             .addFilterAfter(new JwtAuthorizationFilter(jwtTokenProvider, userRepository), JwtAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth                // OAuth2 요청·콜백, 테스트 페이지 및 Swagger/OpenAPI 허용
                 .requestMatchers(
-                        HttpMethod.OPTIONS, "/**", // ✅ CORS 프리플라이트 요청 허용
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/api/users/test",
@@ -82,7 +79,8 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
-                    "/api-docs/**"
+                    "/api-docs/**",
+                        "/v3/**"
                 ).permitAll()                // API 엔드포인트 중 회원가입·로그인 또는 홈페이지 공개
                 .requestMatchers(
                     "/api/users/signup",
