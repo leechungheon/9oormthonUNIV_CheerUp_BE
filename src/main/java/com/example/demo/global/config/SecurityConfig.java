@@ -56,6 +56,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, AuthenticationManager authMgr) throws Exception {
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authMgr, jwtTokenProvider);
+        jwtAuthenticationFilter.setFilterProcessesUrl("/api/users/login"); // ✅ 로그인 URL 설정
         http
                 .cors(Customizer.withDefaults()) // ✅ 이거 추가!
             .csrf(csrf -> csrf.disable())
