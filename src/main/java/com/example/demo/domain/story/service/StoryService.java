@@ -135,6 +135,9 @@ public class StoryService {
     @Transactional(readOnly = true) // 나의 응원함 목록 조회
     public List<StoryResponse> myStories(PrincipalDetails principal) {
         User currentUser = principal.getUser();
+        if (currentUser == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안되어 있다면
+        }
         return storyRepository.findByUserId(currentUser.getId()).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -143,6 +146,7 @@ public class StoryService {
     // 엔티티를 DTO로 변환
     private StoryResponse toDto(Story s) {
         return StoryResponse.builder()
+                .storyId(s.getStoryId())
                 .content(s.getContent())
                 .createdAt(s.getCreatedAt())
                 .categoryName(s.getCategory().getCategoryName())
