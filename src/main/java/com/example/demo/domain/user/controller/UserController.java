@@ -179,34 +179,7 @@ public class UserController {
         cookie.setHttpOnly(true);
         response.addCookie(cookie);
         
-        // OAuth 제공자별 로그아웃 처리
-        if (principal != null && principal.getUser().getProvider() != null) {
-            String provider = principal.getUser().getProvider().toLowerCase();
-            String logoutUrl = getProviderLogoutUrl(provider);
-            
-            if (logoutUrl != null) {
-                // OAuth 제공자의 로그아웃 페이지로 리다이렉트하여 세션 종료
-                response.sendRedirect(logoutUrl);
-                return null; // 리다이렉트 시에는 null 반환
-            }
-        }
-        
-        // 일반 로그아웃 (OAuth가 아닌 경우) - 로그인 페이지로 리다이렉트
-        response.sendRedirect("/api/users/login");
-        return null;
-    }
-      /**
-     * OAuth 제공자별 로그아웃 URL 반환
-     */
-    private String getProviderLogoutUrl(String provider) {
-        String homeUrl = "https://api.cheer-up.net/api/users/login";
-        
-        return switch (provider) {
-            case "google" -> "https://accounts.google.com/logout?continue=" + homeUrl;
-            case "naver" -> "https://nid.naver.com/nidlogin.logout?returl=" + homeUrl;
-            case "kakao" -> "https://kauth.kakao.com/oauth/logout?client_id=${KAKAO_CLIENT_ID}&logout_redirect_uri=" + homeUrl;
-            default -> null;
-        };
+        return ResponseEntity.ok("로그아웃 완료");
     }
 
     /**
@@ -233,41 +206,6 @@ public class UserController {
             return ResponseEntity.ok("Test JWT cookie set. Try accessing /api/users/teststatelogin");
         } catch (Exception e) {
             log.error("Error creating test cookie", e);
-            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 기존 사용자의 provider 정보 업데이트 테스트용 엔드포인트
-     */
-    @GetMapping("/update-test-provider")
-    public ResponseEntity<String> updateTestProvider(@RequestParam(defaultValue = "google") String provider) {
-        try {
-            // 테스트용 사용자 조회 및 provider 업데이트
-            userService.updateUserProvider("test@test.com", provider);
-            return ResponseEntity.ok("Test user provider updated to: " + provider);
-        } catch (Exception e) {
-            log.error("Error updating test user provider", e);
-            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
-        }
-    }
-    
-    /**
-     * 데이터베이스의 사용자 정보 확인용 엔드포인트
-     */
-    @GetMapping("/debug-user/{email}")
-    public ResponseEntity<String> debugUser(@PathVariable String email) {
-        try {
-            // 이메일로 사용자 조회
-            User user = userService.findByEmail(email);
-            String info = String.format(
-                "사용자 정보 - ID: %d, Email: %s, Username: %s, Provider: %s", 
-                user.getId(), user.getEmail(), user.getUsername(), user.getProvider()
-            );
-            log.info(info);
-            return ResponseEntity.ok(info);
-        } catch (Exception e) {
-            log.error("Error debugging user", e);
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
     }
