@@ -145,10 +145,9 @@ public class StoryService {
         return StoryResponse.builder()
                 .content(s.getContent())
                 .createdAt(s.getCreatedAt())
-                //.cheerMessages(s.getCheerMessages())
-                //.category(s.getCategory())
-                /* 주석처리 이유 -> LAZY 로딩 설정되어 있을 경우,
-                    트랜잭션 밖에서 getCheerMessages()나 getCategory()에 접근하면 예외가 발생*/
+                .categoryName(s.getCategory().getCategoryName())
+                .username(s.getUser().getUsername())
+                .cheerCount(s.getCheerMessages().size())
                 .build();
     }
 }

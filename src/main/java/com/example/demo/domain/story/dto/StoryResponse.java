@@ -16,8 +16,7 @@ public class StoryResponse {
     private Long storyId; // 응원함 PK
     private String content; // 사연 내용
     private LocalDateTime createdAt; // 생성 시각
-    private List<CheerResponse> cheerMessages; // 연결된 응원 메시지 목록
     private String categoryName; // 연결된 카테고리
-    private String username; // 사용자 번호
+    private String username; // 사용자 nickname
     private int cheerCount; // 응원 메시지 개수
 }
