@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -70,6 +71,7 @@ public class SecurityConfig {
             .addFilterAfter(new JwtAuthorizationFilter(jwtTokenProvider, userRepository), JwtAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth                // OAuth2 요청·콜백, 테스트 페이지 및 Swagger/OpenAPI 허용
                 .requestMatchers(
+                        HttpMethod.OPTIONS, "/**", // ✅ CORS 프리플라이트 요청 허용
                     "/oauth2/**",
                     "/login/oauth2/**",
                     "/api/users/test",
