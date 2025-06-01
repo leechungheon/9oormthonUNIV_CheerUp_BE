@@ -31,11 +31,11 @@ public class BackendApplication {
 			return new OpenAPI()
 					.info(new Info()
 							.title("CheerUp API")
-							.version("1.0.0")
+							.version("1.0.1")
 							.description("CheerUp 서비스 API 문서")
 					)
 					.servers(List.of(
-							new Server().url("https://api.cheer-up.net")
+							new Server().url("/")  // ← 상대 경로로 변경
 					));
 		}
 	}
