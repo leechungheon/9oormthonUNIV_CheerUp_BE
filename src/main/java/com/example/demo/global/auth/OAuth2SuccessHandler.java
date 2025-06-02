@@ -32,17 +32,18 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         // CustomOAuth2User에서 이미 처리된 User 객체를 직접 가져옴
         CustomOAuth2User customOAuth2User = (CustomOAuth2User) ((OAuth2AuthenticationToken) authentication).getPrincipal();
         User user = customOAuth2User.getUser();
-        
-        log.info("Creating JWT token for user: {} (ID: {})", user.getEmail(), user.getId());
+          log.info("Creating JWT token for user: {} (ID: {})", user.getEmail(), user.getId());
         String token = jwtTokenProvider.createToken(user);
         log.info("JWT token created: {}", token.substring(0, Math.min(token.length(), 50)) + "...");
-          // Set JWT as HttpOnly cookie with Secure flag for HTTPS
-        Cookie cookie = new Cookie("token", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(JwtProperties.EXPIRATION_TIME / 1000);
-        cookie.setSecure(true); // HTTPS에서만 쿠키 전송
-        response.addCookie(cookie);
+          // Set JWT as HttpOnly cookie with proper cross-domain settings
+        // Spring의 Cookie 클래스로는 SameSite 속성을 설정할 수 없으므로 직접 헤더 설정
+        String cookieValue = String.format(
+            "token=%s; Path=/; Max-Age=%d; HttpOnly; Secure; SameSite=None",
+            token,
+            JwtProperties.EXPIRATION_TIME / 1000
+        );
+        response.addHeader("Set-Cookie", cookieValue);
+        log.info("Cookie set with cross-domain configuration");
         
         // 프론트엔드로 리다이렉트 (토큰은 쿠키에 포함됨)
         String frontendUrl = "https://cheerup-omega.vercel.app/home"; // 프론트엔드 성공 페이지 URL
