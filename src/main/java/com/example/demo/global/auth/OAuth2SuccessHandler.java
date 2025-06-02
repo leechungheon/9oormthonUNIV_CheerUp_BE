@@ -42,10 +42,15 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(JwtProperties.EXPIRATION_TIME / 1000);
-        response.addCookie(cookie);
         
-        log.info("JWT cookie set, redirecting to /api/users/teststatelogin");
-        // Redirect to secured test page
-        response.sendRedirect("/api/users/teststatelogin");
+        // 프로덕션 환경에서는 Secure 플래그 추가 (HTTPS 필요)
+        String serverName = request.getServerName();
+        if (serverName.contains("cheer-up.net") || serverName.contains("api.cheer-up.net")) {
+            cookie.setSecure(true); // HTTPS에서만 전송
+        }
+        
+        response.addCookie(cookie);log.info("JWT cookie set, redirecting to OAuth callback");
+        // OAuth 콜백 엔드포인트로 리다이렉트
+        response.sendRedirect("/api/users/oauth/callback");
     }
 }

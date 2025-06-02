@@ -2,14 +2,17 @@ package com.example.demo.domain.user.controller;
 
 import com.example.demo.domain.user.dto.LoginRequest;
 import com.example.demo.domain.user.dto.RegisterRequest;
+import com.example.demo.domain.user.dto.UserInfoResponse;
 import com.example.demo.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import com.example.demo.global.auth.PrincipalDetails;
 import com.example.demo.global.jwt.JwtTokenProvider;
 import com.example.demo.global.jwt.JwtProperties;
+import com.example.demo.global.response.ApiResponse;
 import com.example.demo.domain.user.entity.User;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -334,5 +337,143 @@ public class UserController {
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("OK");
+    }
+
+    /**
+     * 현재 로그인된 사용자 정보 조회 API
+     * 프론트엔드에서 OAuth 로그인 후 사용자 정보(닉네임, 이메일)를 가져올 때 사용
+     */
+    @Operation(summary = "현재 로그인된 사용자 정보 조회", 
+               description = "JWT 토큰을 통해 현재 로그인된 사용자의 정보(ID, 이메일, 닉네임, OAuth 제공자)를 반환합니다.")    
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserInfoResponse>> getCurrentUser(@AuthenticationPrincipal PrincipalDetails principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401)
+                    .body(ApiResponse.error("인증이 필요합니다."));
+        }
+        
+        User user = principal.getUser();
+        UserInfoResponse userInfo = UserInfoResponse.from(user);
+        
+        log.info("사용자 정보 조회 - ID: {}, Email: {}, Username: {}, Provider: {}", 
+                user.getId(), user.getEmail(), user.getUsername(), user.getProvider());
+        
+        return ResponseEntity.ok(ApiResponse.success(userInfo, "사용자 정보 조회 성공"));
+    }
+    
+    /**
+     * 인증 상태 확인 API - 단순히 인증 여부만 확인
+     * 프론트엔드에서 로그인 상태를 빠르게 체크할 때 사용
+     */
+    @Operation(summary = "인증 상태 확인", 
+               description = "현재 사용자의 인증 상태를 확인합니다.")
+    @GetMapping("/auth/status")
+    public ResponseEntity<ApiResponse<Boolean>> checkAuthStatus(@AuthenticationPrincipal PrincipalDetails principal) {
+        boolean isAuthenticated = (principal != null);
+        String message = isAuthenticated ? "인증된 사용자입니다." : "인증되지 않은 사용자입니다.";
+        
+        return ResponseEntity.ok(ApiResponse.success(isAuthenticated, message));
+    }
+
+    /**
+     * OAuth 로그인 성공 후 프론트엔드 콜백 처리
+     * 쿠키에서 JWT 토큰을 추출하여 사용자 정보와 함께 반환
+     */
+    @Operation(summary = "OAuth 콜백 처리", 
+               description = "OAuth 로그인 성공 후 쿠키에서 토큰을 추출하여 사용자 정보를 반환합니다.")
+    @GetMapping("/oauth/callback")
+    public ResponseEntity<String> oauthCallback(@AuthenticationPrincipal PrincipalDetails principal, 
+                                               HttpServletRequest request) {
+        if (principal == null) {
+            // 인증되지 않은 경우 프론트엔드 로그인 페이지로 리다이렉트하는 HTML 반환
+            String html = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>로그인 필요</title>
+                </head>
+                <body>                    <script>
+                        alert('로그인이 필요합니다.');
+                        window.location.href = 'https://cheer-up.net/login';
+                    </script>
+                </body>
+                </html>
+                """;
+            return ResponseEntity.ok()
+                .header("Content-Type", "text/html; charset=UTF-8")
+                .body(html);
+        }
+        
+        User user = principal.getUser();
+        
+        // 프론트엔드로 사용자 정보를 전달하는 HTML 페이지
+        String html = """
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>로그인 성공</title>
+            </head>
+            <body>
+                <script>
+                    // 사용자 정보를 부모 창에 전달
+                    const userInfo = {
+                        id: %d,
+                        email: '%s',
+                        username: '%s',
+                        provider: '%s'
+                    };
+                    
+                    // 부모 창이 있는 경우 (팝업으로 열린 경우)
+                    if (window.opener) {                        window.opener.postMessage({
+                            type: 'OAUTH_SUCCESS',
+                            data: userInfo
+                        }, 'https://cheer-up.net');
+                        window.close();
+                    } else {                        // 같은 탭에서 열린 경우 localStorage에 저장 후 리다이렉트
+                        localStorage.setItem('user', JSON.stringify(userInfo));
+                        window.location.href = 'https://cheer-up.net/dashboard';
+                    }
+                </script>
+            </body>
+            </html>
+            """.formatted(
+                user.getId(), 
+                user.getEmail(), 
+                user.getUsername(), 
+                user.getProvider() != null ? user.getProvider() : "general"
+            );
+            
+        return ResponseEntity.ok()
+            .header("Content-Type", "text/html; charset=UTF-8")
+            .body(html);
+    }
+
+    /**
+     * 프론트엔드용 로그아웃 API
+     * JWT 토큰 쿠키를 삭제하고 성공 응답을 반환
+     */
+    @Operation(summary = "로그아웃", 
+               description = "JWT 토큰 쿠키를 삭제하고 로그아웃을 처리합니다.")    
+    @PostMapping("/auth/logout")
+    public ResponseEntity<ApiResponse<String>> logoutApi(HttpServletRequest request, HttpServletResponse response) {
+        // JWT 토큰 쿠키 삭제
+        Cookie cookie = new Cookie("token", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        
+        // 프로덕션 환경에서는 Secure 플래그 추가
+        String serverName = request.getServerName();
+        if (serverName.contains("cheer-up.net") || serverName.contains("api.cheer-up.net")) {
+            cookie.setSecure(true);
+        }
+        
+        response.addCookie(cookie);
+        
+        log.info("사용자 로그아웃 처리 완료");
+        
+        return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다.", "로그아웃 성공"));
     }
 }
