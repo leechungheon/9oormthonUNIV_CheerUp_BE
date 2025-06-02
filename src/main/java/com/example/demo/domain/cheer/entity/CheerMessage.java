@@ -1,6 +1,8 @@
 package com.example.demo.domain.cheer.entity;
 
+import com.example.demo.domain.category.entity.Category;
 import com.example.demo.domain.story.entity.Story;
+import com.example.demo.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,10 +26,13 @@ public class CheerMessage {
     @Column(nullable = false)
     private LocalDateTime createdAt; // 생성 시각
 
-    @Column(nullable = false)
-    private Long userNumber; // 사용자 번호
+    @ManyToOne(fetch = FetchType.LAZY) // Many-to-one relationship with lazy loading
+    @JoinColumn(name = "user_id", nullable = false) // Foreign key column
+    private User user; // 사용자 번호
 
-    private String category; // 카테고리 (무조건 응원함 등)
+    @ManyToOne(fetch = FetchType.LAZY) // 카테고리와 다대일 관계
+    @JoinColumn(name = "category_id") // 외래 키 설정
+    private Category category; // 연결된 카테고리
 
     @ManyToOne(fetch = FetchType.LAZY) // 다대일 관계, 지연 로딩
     @JoinColumn(name = "story_id", nullable = false) // 외래 키 설정
