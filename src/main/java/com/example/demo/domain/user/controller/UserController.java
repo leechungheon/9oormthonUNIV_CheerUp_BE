@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.io.IOException;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -355,12 +356,79 @@ public class UserController {
             log.error("Error debugging user", e);
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
         }
-    }
-    /**
+    }    /**
      * AWS ELB 헬스체크 엔드포인트
      */
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("OK");
+    }
+
+    // ========== 프론트엔드 연동용 API 엔드포인트 ==========
+    
+    /**
+     * 현재 로그인된 사용자 정보 조회 (프론트엔드용)
+     */
+    @Operation(summary = "현재 사용자 정보 조회", description = "JWT 토큰으로 인증된 현재 사용자의 정보를 반환합니다.")
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal PrincipalDetails principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "로그인이 필요합니다."));
+        }
+        
+        User user = principal.getUser();
+        Map<String, Object> userInfo = Map.of(
+            "id", user.getId(),
+            "email", user.getEmail(),
+            "username", user.getUsername(),
+            "provider", user.getProvider() != null ? user.getProvider() : "일반",
+            "role", user.getRole()
+        );
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "사용자 정보 조회 성공",
+            "data", userInfo
+        ));
+    }
+      /**
+     * 로그인 상태 확인 (프론트엔드용)
+     */
+    @Operation(summary = "로그인 상태 확인", description = "현재 사용자의 로그인 상태를 확인합니다.")
+    @GetMapping("/check-auth")
+    public ResponseEntity<?> checkAuth(@AuthenticationPrincipal PrincipalDetails principal) {
+        if (principal != null) {
+            User user = principal.getUser();
+            return ResponseEntity.ok(Map.of(
+                "authenticated", true,
+                "user", Map.of(
+                    "id", user.getId(),
+                    "email", user.getEmail(),
+                    "username", user.getUsername(),
+                    "provider", user.getProvider() != null ? user.getProvider() : "일반"
+                )
+            ));
+        } else {
+            return ResponseEntity.ok(Map.of("authenticated", false));
+        }
+    }
+    
+    /**
+     * 로그아웃 (프론트엔드용 JSON 응답)
+     */
+    @Operation(summary = "로그아웃", description = "JWT 쿠키를 삭제하고 로그아웃합니다.")
+    @PostMapping("/api-logout")
+    public ResponseEntity<?> apiLogout(HttpServletResponse response) {
+        // JWT 토큰 쿠키 삭제
+        Cookie cookie = new Cookie("token", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+        
+        return ResponseEntity.ok(Map.of(
+            "success", true,
+            "message", "로그아웃이 완료되었습니다."
+        ));
     }
 }
