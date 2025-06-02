@@ -24,7 +24,7 @@ public class BackendApplication {
     	dotenv.entries().forEach(e -> System.setProperty(e.getKey(), e.getValue()));*/
 		SpringApplication.run(BackendApplication.class, args);
 	}
-	
+
 	@Configuration
 	public class OpenApiConfig {
 	  @Bean

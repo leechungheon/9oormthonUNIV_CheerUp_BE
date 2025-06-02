@@ -36,7 +36,7 @@ public class UserService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword())) // 비밀번호 암호화
                 .username(request.getUsername())
-                .role("USER") // 기본 권한 부여
+                .role("ROLE_USER") // 기본 권한 부여
                 .build();
 
         userRepository.save(user);

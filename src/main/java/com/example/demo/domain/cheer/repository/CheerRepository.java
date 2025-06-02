@@ -8,8 +8,12 @@ import java.util.List;
 
 public interface CheerRepository extends JpaRepository<CheerMessage, Long> {
 
-    List<CheerMessage> findByStory_StoryId(Long storyId); // 특정 사연 ID에 해당하는 응원 메시지 목록 조회
+    @Query("SELECT cm FROM CheerMessage cm JOIN FETCH cm.user u JOIN FETCH cm.category c WHERE cm.story.storyId = :storyId")
+    List<CheerMessage> findByStory_StoryId(@Param("storyId") Long storyId);
 
-    @Query(value = "SELECT * FROM cheer_message WHERE category = :cat ORDER BY RAND() LIMIT 1", nativeQuery = true)
-    CheerMessage findRandomByCategory(@Param("cat") String category); // 카테고리 기반 랜덤 응원 메시지 조회 (네이티브 쿼리)
+
+    @Query("SELECT cm FROM CheerMessage cm JOIN FETCH cm.user u JOIN FETCH cm.category c WHERE cm.category.categoryId = :catId")
+    List<CheerMessage> findAllByCategoryWithJoins(@Param("catId") Long categoryId);
+
+
 }

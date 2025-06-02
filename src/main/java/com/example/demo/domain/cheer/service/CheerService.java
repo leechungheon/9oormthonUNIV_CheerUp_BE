@@ -44,11 +44,11 @@ public class CheerService {
                     .orElseThrow(() -> new CustomException(ErrorCode.STORY_NOT_FOUND));
 
             CheerMessage cm = CheerMessage.builder()
-                    .story(story)
                     .content(req.getContent())
-                    .userNumber(user.getId()) // 로그인 사용자 ID 사용
                     .createdAt(LocalDateTime.now())
-                    .category(req.getCategory())
+                    .user(user) // 로그인 사용자 ID 사용
+                    .category(story.getCategory()) // 사연의 카테고리 사용
+                    .story(story)
                     .build();
 
             cheerRepository.save(cm);
@@ -68,13 +68,13 @@ public class CheerService {
     }
 
     @Transactional // 랜덤 응원 메시지 조회 (카테고리 기반, 하루 3회 제한 포함)
-    public CheerResponse randomByCategory(String category, Long userNumber) {
+    public CheerResponse randomByCategory(PrincipalDetails principal, Long categoryId) {
         LocalDate today = LocalDate.now();
-
+        User user= principal.getUser();
         UserCheerLimit limit = limitRepository
-                .findByUserNumberAndDate(userNumber, today)
+                .findByUserNumberAndDate(user.getId(), today)
                 .orElseGet(() -> UserCheerLimit.builder()
-                        .userNumber(userNumber)
+                        .userNumber(user.getId())
                         .date(today)
                         .count(0)
                         .build());
@@ -86,7 +86,10 @@ public class CheerService {
         limit.setCount(limit.getCount() + 1); // 횟수 +1
         limitRepository.save(limit);
 
-        CheerMessage cm = cheerRepository.findRandomByCategory(category); // 카테고리에 해당하는 응원 메시지 중 하나 무작위 조회
+        List<CheerMessage> messages = cheerRepository.findAllByCategoryWithJoins(categoryId);
+        if (messages.isEmpty()) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+
+        CheerMessage cm = messages.get((int)(Math.random() * messages.size()));
         return toDto(cm);
     }
 
@@ -98,7 +101,7 @@ public class CheerService {
         CheerMessage cm = cheerRepository.findById(id) // 수정할 응원 메시지 조회
                 .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
 
-        if (!Objects.equals(cm.getUserNumber(), user.getId())) { // 본인이 작성한 응원 메시지가 아닌 경우 권한 없음
+        if (!Objects.equals(cm.getUser().getId(), user.getId())) { // 본인이 작성한 응원 메시지가 아닌 경우 권한 없음
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
@@ -113,11 +116,11 @@ public class CheerService {
     @Transactional // 응원 메시지 삭제
     public void delete(Long id, PrincipalDetails principal) {
         User user = principal.getUser();
-
+        if (user == null) throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인하지 않은 사용자
         CheerMessage cm = cheerRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.MESSAGE_NOT_FOUND));
 
-        if (!Objects.equals(cm.getUserNumber(), user.getId())) {
+        if (!Objects.equals(cm.getUser().getId(), user.getId())) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
@@ -126,13 +129,17 @@ public class CheerService {
 
     // 엔티티를 DTO로 변환
     private CheerResponse toDto(CheerMessage cm) {
+        if (cm == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+
+        System.out.println("CheerMessage: " + cm);
+        System.out.println("User: " + cm.getUser());
+        System.out.println("Category: " + cm.getCategory());
         return CheerResponse.builder()
-                //.cheerMessageId(cm.getCheerMessageId())
-                //.storyId(cm.getStory().getStoryId())
+                .cheerId(cm.getCheerMessageId())
                 .content(cm.getContent())
                 .createdAt(cm.getCreatedAt())
-                //.userNumber(cm.getUserNumber())
-                .category(cm.getCategory())
+                .username(cm.getUser() != null ? cm.getUser().getUsername() : "익명")
+                .categoryName(cm.getCategory() != null ? cm.getCategory().getCategoryName() : "기타")
                 .build();
     }
 }

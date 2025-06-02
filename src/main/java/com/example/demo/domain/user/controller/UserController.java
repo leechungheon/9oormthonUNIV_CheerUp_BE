@@ -136,7 +136,6 @@ public class UserController {
                 .header("Content-Type", "text/html; charset=UTF-8")
                 .body(loginHtml);
         }
-        
         // 로그인된 사용자 정보 표시
         Long userId = principal.getUser().getId();
         String email = principal.getUser().getEmail();

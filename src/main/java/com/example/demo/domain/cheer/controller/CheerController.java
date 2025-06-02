@@ -40,9 +40,9 @@ public class CheerController {
 
     @Operation(summary = "랜덤 응원 메시지 조회", description = "카테고리 기반 랜덤 응원 메시지를 하루 3회까지 조회할 수 있습니다.")
     @GetMapping("/random")
-    public ApiResponse<?> randomByCategory(@RequestParam String category, @RequestParam Long userNumber) {
+    public ApiResponse<?> randomByCategory(@AuthenticationPrincipal PrincipalDetails principal,@RequestParam Long categoryId) {
         try {
-            CheerResponse randomCheer = cheerService.randomByCategory(category, userNumber);
+            CheerResponse randomCheer = cheerService.randomByCategory(principal, categoryId);
             return ApiResponse.success(randomCheer, "랜덤 응원 메시지 조회 성공");
         } catch (CustomException e) {
             return ApiResponse.error(e.getErrorCode().getMessage());

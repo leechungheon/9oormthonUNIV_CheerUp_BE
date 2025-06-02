@@ -14,6 +14,4 @@ public class CheerRequest {
 
     @NotBlank(message = "내용을 입력해주세요.")
     private String content; // 응원 메시지 내용
-
-    private String category; // 무조건 응원함용 카테고리 (선택값)
 }

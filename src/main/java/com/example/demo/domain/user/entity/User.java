@@ -10,6 +10,7 @@ import java.util.List;
 
 @Entity // JPA 엔티티 매핑
 @Data // Getter, Setter, toString, equals, hashCode 자동 생성
+@Table(name = "user") // 테이블 이름 지정
 @NoArgsConstructor // 기본 생성자 자동 생성
 @AllArgsConstructor // 모든 필드를 매개변수로 받는 생성자 자동 생성
 @Builder // 빌더 패턴 적용
@@ -32,29 +33,25 @@ public class User {
     @Column(nullable = false)
     private String role; // 사용자 권한 (예: USER, ADMIN)
 
-    private String profileImageUrl; // 프로필 이미지 URL (nullable)
-
     @JsonManagedReference
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     //mappedBy = "user"는 Story 엔티티의 user 필드가 외래키의 주인임을 의미
     private List<Story> stories = new ArrayList<>();
     // 생성자 오버로딩
-    public User(String email, String username, String password, String role, String profileImageUrl) {
+    public User(String email, String username, String password, String role) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.role = role;
-        this.profileImageUrl = profileImageUrl;
     }
     
     // OAuth 제공자를 포함한 생성자
-    public User(String email, String username, String password, String role, String profileImageUrl, String provider) {
+    public User(String email, String username, String password, String role, String provider) {
         this.email = email;
         this.username = username;
         this.password = password;
         this.role = role;
-        this.profileImageUrl = profileImageUrl;
         this.provider = provider;
     }
 }

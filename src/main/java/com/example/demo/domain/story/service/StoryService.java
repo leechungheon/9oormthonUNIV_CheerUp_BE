@@ -1,6 +1,7 @@
 package com.example.demo.domain.story.service;
 
 import com.example.demo.domain.category.dto.CategoryResponse;
+import com.example.demo.domain.category.entity.Category;
 import com.example.demo.domain.category.repository.CategoryRepository;
 import com.example.demo.domain.cheer.dto.CheerResponse;
 import com.example.demo.domain.story.dto.*;
@@ -38,7 +39,7 @@ public class StoryService {
             if (req.getContent() == null || req.getContent().isBlank()) {
                 throw new CustomException(ErrorCode.INVALID_CONTENT); // 내용이 비어있다면
             }
-            var category = categoryRepository.findById(req.getCategoryId())
+            Category category = categoryRepository.findById(req.getCategoryId())
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CATEGORY)); // 카테고리 유효성 검사
 
             Story story = Story.builder()
@@ -135,6 +136,9 @@ public class StoryService {
     @Transactional(readOnly = true) // 나의 응원함 목록 조회
     public List<StoryResponse> myStories(PrincipalDetails principal) {
         User currentUser = principal.getUser();
+        if (currentUser == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안되어 있다면
+        }
         return storyRepository.findByUserId(currentUser.getId()).stream()
                 .map(this::toDto)
                 .collect(Collectors.toList());
@@ -143,12 +147,12 @@ public class StoryService {
     // 엔티티를 DTO로 변환
     private StoryResponse toDto(Story s) {
         return StoryResponse.builder()
+                .storyId(s.getStoryId())
                 .content(s.getContent())
                 .createdAt(s.getCreatedAt())
-                //.cheerMessages(s.getCheerMessages())
-                //.category(s.getCategory())
-                /* 주석처리 이유 -> LAZY 로딩 설정되어 있을 경우,
-                    트랜잭션 밖에서 getCheerMessages()나 getCategory()에 접근하면 예외가 발생*/
+                .categoryName(s.getCategory().getCategoryName())
+                .username(s.getUser().getUsername())
+                .cheerCount(s.getCheerMessages().size())
                 .build();
     }
 }
