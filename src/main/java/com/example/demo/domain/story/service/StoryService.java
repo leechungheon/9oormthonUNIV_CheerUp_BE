@@ -1,9 +1,7 @@
 package com.example.demo.domain.story.service;
 
-import com.example.demo.domain.category.dto.CategoryResponse;
 import com.example.demo.domain.category.entity.Category;
 import com.example.demo.domain.category.repository.CategoryRepository;
-import com.example.demo.domain.cheer.dto.CheerResponse;
 import com.example.demo.domain.story.dto.*;
 import com.example.demo.domain.story.entity.Story;
 import com.example.demo.domain.story.repository.StoryRepository;
@@ -32,6 +30,9 @@ public class StoryService {
     @Transactional // 응원함 생성
     public StoryResponse create(PrincipalDetails principal, StoryRequest req) {
         try {
+            if (principal == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED); // 인증되지 않은 사용자
+            }
             User user = principal.getUser(); // 로그인한 유저 객체 가져오기
             if (user == null) {
                 throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안되어 있다면
