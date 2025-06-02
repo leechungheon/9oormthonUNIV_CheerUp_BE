@@ -99,6 +99,9 @@ public class SecurityConfig {
                                 "/api/users/logout",
                                 "/api/users/api-logout",  // 프론트엔드용 로그아웃 API 허용
                                 "/api/users/check-auth",  // 로그인 상태 확인 API 허용
+                                "/api/cheers/**",  // 응원 메시지 API 허용
+                                "/api/stories/**", // 스토리 API 허용  
+                                "/api/categories/**", // 카테고리 API 허용
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
