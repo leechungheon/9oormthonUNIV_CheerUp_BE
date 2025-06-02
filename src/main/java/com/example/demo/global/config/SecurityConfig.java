@@ -67,6 +67,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(form -> form.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
+                // HTTPS 강제 설정 (프로덕션 환경에서)
+                .requiresChannel(channel -> 
+                    channel.requestMatchers(r -> r.getHeader("X-Forwarded-Proto") != null)
+                           .requiresSecure())
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)

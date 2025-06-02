@@ -263,6 +263,7 @@ public class UserController {
         cookie.setMaxAge(0);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true); // HTTPS에서만 쿠키 전송
         response.addCookie(cookie);
         
         // OAuth 제공자별 로그아웃 처리
@@ -423,6 +424,7 @@ public class UserController {
         cookie.setMaxAge(0);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setSecure(true); // HTTPS에서만 쿠키 전송
         response.addCookie(cookie);
         
         return ResponseEntity.ok(Map.of(

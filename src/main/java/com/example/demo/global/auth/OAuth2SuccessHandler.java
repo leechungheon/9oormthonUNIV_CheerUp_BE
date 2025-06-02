@@ -36,12 +36,12 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         log.info("Creating JWT token for user: {} (ID: {})", user.getEmail(), user.getId());
         String token = jwtTokenProvider.createToken(user);
         log.info("JWT token created: {}", token.substring(0, Math.min(token.length(), 50)) + "...");
-        
-        // Set JWT as HttpOnly cookie (store raw token without prefix to avoid invalid space)
+          // Set JWT as HttpOnly cookie with Secure flag for HTTPS
         Cookie cookie = new Cookie("token", token);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         cookie.setMaxAge(JwtProperties.EXPIRATION_TIME / 1000);
+        cookie.setSecure(true); // HTTPS에서만 쿠키 전송
         response.addCookie(cookie);
         
         // 프론트엔드로 리다이렉트 (토큰은 쿠키에 포함됨)
