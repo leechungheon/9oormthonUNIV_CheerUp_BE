@@ -86,7 +86,10 @@ public class CheerService {
         limit.setCount(limit.getCount() + 1); // 횟수 +1
         limitRepository.save(limit);
 
-        CheerMessage cm = cheerRepository.findRandomByCategory(categoryId); // 카테고리에 해당하는 응원 메시지 중 하나 무작위 조회
+        List<CheerMessage> messages = cheerRepository.findAllByCategoryWithJoins(categoryId);
+        if (messages.isEmpty()) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+
+        CheerMessage cm = messages.get((int)(Math.random() * messages.size()));
         return toDto(cm);
     }
 
@@ -126,12 +129,17 @@ public class CheerService {
 
     // 엔티티를 DTO로 변환
     private CheerResponse toDto(CheerMessage cm) {
+        if (cm == null) throw new CustomException(ErrorCode.MESSAGE_NOT_FOUND);
+
+        System.out.println("CheerMessage: " + cm);
+        System.out.println("User: " + cm.getUser());
+        System.out.println("Category: " + cm.getCategory());
         return CheerResponse.builder()
                 .cheerId(cm.getCheerMessageId())
                 .content(cm.getContent())
                 .createdAt(cm.getCreatedAt())
-                .username(cm.getUser().getUsername())
-                .categoryName(cm.getCategory().getCategoryName())
+                .username(cm.getUser() != null ? cm.getUser().getUsername() : "익명")
+                .categoryName(cm.getCategory() != null ? cm.getCategory().getCategoryName() : "기타")
                 .build();
     }
 }

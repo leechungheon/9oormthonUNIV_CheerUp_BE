@@ -8,10 +8,12 @@ import java.util.List;
 
 public interface CheerRepository extends JpaRepository<CheerMessage, Long> {
 
-    @Query("SELECT c FROM CheerMessage c JOIN FETCH c.user JOIN FETCH c.category WHERE c.story.storyId = :storyId")
+    @Query("SELECT cm FROM CheerMessage cm JOIN FETCH cm.user u JOIN FETCH cm.category c WHERE cm.story.storyId = :storyId")
     List<CheerMessage> findByStory_StoryId(@Param("storyId") Long storyId);
 
-    @Query(value = "SELECT * FROM cheer_message WHERE category_id = :catId ORDER BY RAND() LIMIT 1", nativeQuery = true)
-    CheerMessage findRandomByCategory(@Param("catId") Long categoryId);
+
+    @Query("SELECT cm FROM CheerMessage cm JOIN FETCH cm.user u JOIN FETCH cm.category c WHERE cm.category.categoryId = :catId")
+    List<CheerMessage> findAllByCategoryWithJoins(@Param("catId") Long categoryId);
+
 
 }
