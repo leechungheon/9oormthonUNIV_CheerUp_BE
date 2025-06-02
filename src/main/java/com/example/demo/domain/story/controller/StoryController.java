@@ -4,10 +4,11 @@ import com.example.demo.domain.story.dto.*;
 import com.example.demo.domain.story.service.StoryService;
 import com.example.demo.global.auth.PrincipalDetails;
 import com.example.demo.global.response.ApiResponse;
+import com.example.demo.global.exception.CustomException;
+import com.example.demo.global.exception.ErrorCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +29,9 @@ public class StoryController {
     @PostMapping("/create")
     public ApiResponse<StoryResponse> createStory(@AuthenticationPrincipal PrincipalDetails principal,
                                                   @RequestBody @Valid StoryRequest story) {
+        if (principal == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
         StoryResponse createdStory=storyService.create(principal,story);
         return ApiResponse.success(createdStory, "스토리 생성 성공");
     }

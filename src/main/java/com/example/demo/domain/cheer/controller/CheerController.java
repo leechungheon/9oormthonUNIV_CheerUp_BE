@@ -4,11 +4,11 @@ import com.example.demo.domain.cheer.dto.*;
 import com.example.demo.domain.cheer.service.CheerService;
 import com.example.demo.global.auth.PrincipalDetails;
 import com.example.demo.global.exception.CustomException;
+import com.example.demo.global.exception.ErrorCode;
 import com.example.demo.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +28,9 @@ public class CheerController {
     @Operation(summary = "응원 메시지 생성")
     @PostMapping
     public ApiResponse<CheerResponse> create(@AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
+        if (principal == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
         CheerResponse createdCheer = cheerService.create(principal, req);
         return ApiResponse.success(createdCheer, "응원 메시지 생성 성공");
     }
@@ -40,9 +43,13 @@ public class CheerController {
 
     @Operation(summary = "랜덤 응원 메시지 조회", description = "카테고리 기반 랜덤 응원 메시지를 하루 3회까지 조회할 수 있습니다.")
     @GetMapping("/random")
-    public ApiResponse<?> randomByCategory(@AuthenticationPrincipal PrincipalDetails principal,@RequestParam Long categoryId) {
+    public ApiResponse<?> randomByCategory(@AuthenticationPrincipal PrincipalDetails principal,
+                                         @RequestParam(required = false) Long categoryId,
+                                         @RequestParam(required = false) String category,
+                                         @RequestParam(required = false) Long userNumber) {
         try {
-            CheerResponse randomCheer = cheerService.randomByCategory(principal, categoryId);
+            // categoryId 또는 category 이름을 사용해서 응원 메시지 조회
+            CheerResponse randomCheer = cheerService.randomByCategoryWithOptionalAuth(principal, categoryId, category, userNumber);
             return ApiResponse.success(randomCheer, "랜덤 응원 메시지 조회 성공");
         } catch (CustomException e) {
             return ApiResponse.error(e.getErrorCode().getMessage());
