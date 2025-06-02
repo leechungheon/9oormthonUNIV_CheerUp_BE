@@ -36,6 +36,10 @@ public class CheerService {
     @Transactional
     public CheerResponse create(PrincipalDetails principal, CheerRequest req) {
         try {
+            if (principal == null) {
+                throw new CustomException(ErrorCode.UNAUTHORIZED);
+            }
+            
             User user = principal.getUser();
             if (user == null) throw new CustomException(ErrorCode.UNAUTHORIZED);
 

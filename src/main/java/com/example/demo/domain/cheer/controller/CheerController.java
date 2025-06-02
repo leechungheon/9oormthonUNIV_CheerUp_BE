@@ -4,6 +4,7 @@ import com.example.demo.domain.cheer.dto.*;
 import com.example.demo.domain.cheer.service.CheerService;
 import com.example.demo.global.auth.PrincipalDetails;
 import com.example.demo.global.exception.CustomException;
+import com.example.demo.global.exception.ErrorCode;
 import com.example.demo.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,6 +28,9 @@ public class CheerController {
     @Operation(summary = "응원 메시지 생성")
     @PostMapping
     public ApiResponse<CheerResponse> create(@AuthenticationPrincipal PrincipalDetails principal, @Valid @RequestBody CheerRequest req) {
+        if (principal == null) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
         CheerResponse createdCheer = cheerService.create(principal, req);
         return ApiResponse.success(createdCheer, "응원 메시지 생성 성공");
     }
