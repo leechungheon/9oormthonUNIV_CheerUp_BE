@@ -33,16 +33,15 @@ public class UserController {
     @GetMapping("/test")
     public String test(@RequestParam("userId") Long userId) {
         return "Test page - User ID: " + userId;
-    }
-
+    }    
     /**
-     * 로그인 페이지 - 이미 로그인된 경우 teststatelogin으로 리다이렉트
+     * 로그인 페이지 - 이미 로그인된 경우 home으로 리다이렉트
      */
     @GetMapping("/login")
     public ResponseEntity<String> loginPage(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
-        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
+        // 이미 로그인된 상태면 home으로 리다이렉트
         if (principal != null) {
-            response.sendRedirect("/api/users/teststatelogin");
+            response.sendRedirect("/api/users/home");
             return null;
         }
           String html = """
@@ -88,67 +87,57 @@ public class UserController {
         return ResponseEntity.ok()
             .header("Content-Type", "text/html; charset=UTF-8")
             .body(html);
-    }
-    @GetMapping("/home")
-    public String home(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
-        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
-        if (principal != null) {
-            response.sendRedirect("/api/users/teststatelogin");
-            return null;
-        }
-        return "홈페이지 - 로그인이 필요합니다. <a href='/oauth2/authorization/google'>Google로 로그인</a> | <a href='/oauth2/authorization/naver'>네이버로 로그인</a> | <a href='/oauth2/authorization/kakao'>카카오로 로그인</a>";
-    }
-
-    @GetMapping("/oauth2/google")
-    public void redirectToGoogle(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
-        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
-        if (principal != null) {
-            response.sendRedirect("/api/users/teststatelogin");
-            return;
-        }
-        // Google OAuth2 인증 페이지로 리다이렉트
-        response.sendRedirect("/oauth2/authorization/google");
-    }
-
-    @GetMapping("/oauth2/naver")
-    public void redirectToNaver(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
-        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
-        if (principal != null) {
-            response.sendRedirect("/api/users/teststatelogin");
-            return;
-        }
-        // Naver OAuth2 인증 페이지로 리다이렉트
-        response.sendRedirect("/oauth2/authorization/naver");
-    }
-
-    @GetMapping("/oauth2/kakao")
-    public void redirectToKakao(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
-        // 이미 로그인된 상태면 teststatelogin으로 리다이렉트
-        if (principal != null) {
-            response.sendRedirect("/api/users/teststatelogin");
-            return;
-        }
-        // Kakao OAuth2 인증 페이지로 리다이렉트
-        response.sendRedirect("/oauth2/authorization/kakao");
-    }
-
-    @Operation(summary = "회원가입 요청 처리")
-    @PostMapping("/signup")
-    public ResponseEntity<String> signup(@Valid @RequestBody RegisterRequest request) {
-        userService.signup(request);
-        return ResponseEntity.ok("회원가입이 완료되었습니다.");
-    }
-
-    @Operation(summary = "로그인 요청 처리")
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
-        String token = userService.login(request);
-        return ResponseEntity.ok(token);
     }    
-    /*
-     * 로그인 상태 확인용 엔드포인트 - HTML 페이지 형태로 응답
-     */    @GetMapping("/teststatelogin")
-    public ResponseEntity<String> testStateLogin(@AuthenticationPrincipal PrincipalDetails principal) {
+    @GetMapping("/home")
+    public ResponseEntity<String> home(@AuthenticationPrincipal PrincipalDetails principal) {
+        // 로그인되지 않은 경우 로그인 페이지로 리다이렉트하는 HTML 반환
+        if (principal == null) {
+            String loginHtml = """
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>로그인 필요</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; text-align: center; }
+                        .container { max-width: 400px; margin: 0 auto; }
+                        .login-btn { 
+                            padding: 12px 24px; 
+                            border: none; border-radius: 5px; cursor: pointer; font-size: 16px;
+                            text-decoration: none; display: inline-block; margin: 5px;
+                        }
+                        .google-btn { background: #4285f4; color: white; }
+                        .google-btn:hover { background: #3367d6; }
+                        .naver-btn { background: #03c75a; color: white; }
+                        .naver-btn:hover { background: #02b051; }
+                        .kakao-btn { background: #fee500; color: #000; }
+                        .kakao-btn:hover { background: #fdd835; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>홈페이지</h1>
+                        <p>로그인이 필요합니다. 소셜 계정으로 로그인하세요.</p>
+                        <div>
+                            <a href="/oauth2/authorization/google" class="login-btn google-btn">Google로 로그인</a>
+                        </div>
+                        <div>
+                            <a href="/oauth2/authorization/naver" class="login-btn naver-btn">네이버로 로그인</a>
+                        </div>
+                        <div>
+                            <a href="/oauth2/authorization/kakao" class="login-btn kakao-btn">카카오로 로그인</a>
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """;
+            
+            return ResponseEntity.ok()
+                .header("Content-Type", "text/html; charset=UTF-8")
+                .body(loginHtml);
+        }
+        
+        // 로그인된 사용자 정보 표시
         Long userId = principal.getUser().getId();
         String email = principal.getUser().getEmail();
         String username = principal.getUser().getUsername();
@@ -162,7 +151,7 @@ public class UserController {
             <html>
             <head>
                 <meta charset="UTF-8">
-                <title>로그인 상태 확인</title>
+                <title>홈페이지</title>
                 <style>
                     body { font-family: Arial, sans-serif; padding: 20px; }
                     .container { max-width: 600px; margin: 0 auto; }
@@ -189,7 +178,7 @@ public class UserController {
             </head>
             <body>
                 <div class="container">
-                    <h1>로그인 상태 확인</h1>
+                    <h1>홈페이지</h1>
                     <div class="user-info">
                         <h3>로그인된 사용자 정보:</h3>
                         <p><strong>사용자 ID:</strong> %d</p>
@@ -222,7 +211,48 @@ public class UserController {
         return ResponseEntity.ok()
             .header("Content-Type", "text/html; charset=UTF-8")
             .body(html);
-    }      
+    }    
+    @GetMapping("/oauth2/google")
+    public void redirectToGoogle(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
+        // 이미 로그인된 상태면 home으로 리다이렉트
+        if (principal != null) {
+            response.sendRedirect("/api/users/home");
+            return;
+        }
+        // Google OAuth2 인증 페이지로 리다이렉트
+        response.sendRedirect("/oauth2/authorization/google");
+    }    @GetMapping("/oauth2/naver")
+    public void redirectToNaver(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
+        // 이미 로그인된 상태면 home으로 리다이렉트
+        if (principal != null) {
+            response.sendRedirect("/api/users/home");
+            return;
+        }
+        // Naver OAuth2 인증 페이지로 리다이렉트
+        response.sendRedirect("/oauth2/authorization/naver");
+    }    @GetMapping("/oauth2/kakao")
+    public void redirectToKakao(@AuthenticationPrincipal PrincipalDetails principal, HttpServletResponse response) throws IOException {
+        // 이미 로그인된 상태면 home으로 리다이렉트
+        if (principal != null) {
+            response.sendRedirect("/api/users/home");
+            return;
+        }
+        // Kakao OAuth2 인증 페이지로 리다이렉트
+        response.sendRedirect("/oauth2/authorization/kakao");
+    }
+
+    @Operation(summary = "회원가입 요청 처리")
+    @PostMapping("/signup")
+    public ResponseEntity<String> signup(@Valid @RequestBody RegisterRequest request) {
+        userService.signup(request);
+        return ResponseEntity.ok("회원가입이 완료되었습니다.");
+    }
+
+    @Operation(summary = "로그인 요청 처리")
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
+        String token = userService.login(request);
+        return ResponseEntity.ok(token);    }    
     /*
         로그아웃 처리 - OAuth 제공자별로 세션 종료
      */
@@ -286,7 +316,7 @@ public class UserController {
             cookie.setMaxAge(JwtProperties.EXPIRATION_TIME / 1000);
             response.addCookie(cookie);
             
-            return ResponseEntity.ok("Test JWT cookie set. Try accessing /api/users/teststatelogin");
+            return ResponseEntity.ok("Test JWT cookie set. Try accessing /api/users/home");
         } catch (Exception e) {
             log.error("Error creating test cookie", e);
             return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
