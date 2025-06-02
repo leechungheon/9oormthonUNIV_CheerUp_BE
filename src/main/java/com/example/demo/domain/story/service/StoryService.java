@@ -1,6 +1,7 @@
 package com.example.demo.domain.story.service;
 
 import com.example.demo.domain.category.dto.CategoryResponse;
+import com.example.demo.domain.category.entity.Category;
 import com.example.demo.domain.category.repository.CategoryRepository;
 import com.example.demo.domain.cheer.dto.CheerResponse;
 import com.example.demo.domain.story.dto.*;
@@ -38,7 +39,7 @@ public class StoryService {
             if (req.getContent() == null || req.getContent().isBlank()) {
                 throw new CustomException(ErrorCode.INVALID_CONTENT); // 내용이 비어있다면
             }
-            var category = categoryRepository.findById(req.getCategoryId())
+            Category category = categoryRepository.findById(req.getCategoryId())
                     .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CATEGORY)); // 카테고리 유효성 검사
 
             Story story = Story.builder()
