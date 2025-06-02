@@ -60,7 +60,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable())            .oauth2Login(oauth2 -> oauth2
+                .httpBasic(httpBasic -> httpBasic.disable())
+                .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler((req, res, ex) -> res.sendError(HttpServletResponse.SC_UNAUTHORIZED))
@@ -88,12 +89,14 @@ public class SecurityConfig {
                                 "/api/users/oauth2/naver",
                                 "/api/users/oauth2/kakao",
                                 "/api/users/logout",
+                                "/api/users/check-auth",  // 로그인 상태 확인 API 허용
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/webjars/swagger-ui/**"
                         ).permitAll()
                         .anyRequest().authenticated()
-                );        return http.build();
+                );
+        return http.build();
     }
 }

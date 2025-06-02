@@ -43,8 +43,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         cookie.setPath("/");
         cookie.setMaxAge(JwtProperties.EXPIRATION_TIME / 1000);
         response.addCookie(cookie);
-          log.info("JWT cookie set, redirecting to /api/users/home");
-        // Redirect to secured test page
-        response.sendRedirect("/api/users/home");
+        
+        // 프론트엔드로 리다이렉트 (토큰은 쿠키에 포함됨)
+        String frontendUrl = "https://cheerup-omega.vercel.app/home"; // 프론트엔드 성공 페이지 URL
+        log.info("Redirecting to frontend: {}", frontendUrl);
+        response.sendRedirect(frontendUrl);
     }
 }
