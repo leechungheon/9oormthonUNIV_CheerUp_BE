@@ -43,9 +43,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         cookie.setPath("/");
         cookie.setMaxAge(JwtProperties.EXPIRATION_TIME / 1000);
         response.addCookie(cookie);
-        
-        log.info("JWT cookie set, redirecting to /api/users/teststatelogin");
+          log.info("JWT cookie set, redirecting to /api/users/home");
         // Redirect to secured test page
-        response.sendRedirect("/api/users/teststatelogin");
+        response.sendRedirect("/api/users/home");
     }
 }
