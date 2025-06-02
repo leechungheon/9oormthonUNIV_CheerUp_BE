@@ -56,6 +56,7 @@ public class CheerService {
         } catch (DataAccessException e) {
             throw new CustomException(ErrorCode.DATA_ACCESS_ERROR);
         } catch (Exception e) {
+            e.printStackTrace();  // 여기 추가해서 실제 예외 원인을 콘솔에 출력
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
