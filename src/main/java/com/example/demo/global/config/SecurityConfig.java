@@ -90,6 +90,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/users/signup",
                                 "/api/users/login",
+                                "/api/users/me",
                                 "/api/users/home",
                                 "/api/users/oauth2/google",
                                 "/api/users/oauth2/naver",
