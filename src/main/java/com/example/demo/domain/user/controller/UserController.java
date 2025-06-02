@@ -412,8 +412,7 @@ public class UserController {
             return ResponseEntity.ok(Map.of("authenticated", false));
         }
     }
-    
-    /**
+      /**
      * 로그아웃 (프론트엔드용 JSON 응답)
      */
     @Operation(summary = "로그아웃", description = "JWT 쿠키를 삭제하고 로그아웃합니다.")
@@ -428,7 +427,8 @@ public class UserController {
         
         return ResponseEntity.ok(Map.of(
             "success", true,
-            "message", "로그아웃이 완료되었습니다."
+            "message", "로그아웃이 완료되었습니다.",
+            "redirectUrl", "https://cheerup-omega.vercel.app/signin"  // 프론트엔드 사인인 페이지로 리다이렉트
         ));
     }
 }
