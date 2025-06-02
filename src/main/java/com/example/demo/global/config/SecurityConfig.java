@@ -85,6 +85,8 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/users/home",
                                 "/api/users/oauth2/google",
+                                "/api/users/oauth2/naver",
+                                "/api/users/oauth2/kakao",
                                 "/api/users/logout",
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
