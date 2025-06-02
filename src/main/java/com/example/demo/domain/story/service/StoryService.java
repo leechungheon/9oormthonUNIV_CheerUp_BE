@@ -6,6 +6,7 @@ import com.example.demo.domain.cheer.dto.CheerResponse;
 import com.example.demo.domain.story.dto.*;
 import com.example.demo.domain.story.entity.Story;
 import com.example.demo.domain.story.repository.StoryRepository;
+import com.example.demo.domain.cheer.repository.CheerRepository;
 import com.example.demo.domain.user.entity.User;
 import com.example.demo.global.auth.PrincipalDetails;
 import com.example.demo.global.exception.CustomException;
@@ -27,6 +28,7 @@ public class StoryService {
 
     private final StoryRepository storyRepository;
     private final CategoryRepository categoryRepository; // 카테고리 리포지토리 의존성 주입
+    private final CheerRepository cheerRepository;
 
     @Transactional // 응원함 생성
     public StoryResponse create(PrincipalDetails principal, StoryRequest req) {
@@ -35,6 +37,13 @@ public class StoryService {
             if (user == null) {
                 throw new CustomException(ErrorCode.UNAUTHORIZED); // 로그인 안되어 있다면
             }
+
+            // 응원 1회 이상 여부 체크
+            long cheerCount = cheerRepository.countByUserNumberAndOthers(user.getId());
+            if (cheerCount < 1) {
+                throw new CustomException(ErrorCode.FORBIDDEN);
+            }
+
             if (req.getContent() == null || req.getContent().isBlank()) {
                 throw new CustomException(ErrorCode.INVALID_CONTENT); // 내용이 비어있다면
             }
@@ -144,7 +153,7 @@ public class StoryService {
     }
 
     // 엔티티를 DTO로 변환
-    private StoryResponse toDto(Story s) {
+    public StoryResponse toDto(Story s) {
         return StoryResponse.builder()
                 .storyId(s.getStoryId())
                 .content(s.getContent())

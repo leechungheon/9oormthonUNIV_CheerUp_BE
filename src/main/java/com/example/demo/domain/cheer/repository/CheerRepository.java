@@ -12,4 +12,8 @@ public interface CheerRepository extends JpaRepository<CheerMessage, Long> {
 
     @Query(value = "SELECT * FROM cheer_message WHERE category = :cat ORDER BY RAND() LIMIT 1", nativeQuery = true)
     CheerMessage findRandomByCategory(@Param("cat") String category); // 카테고리 기반 랜덤 응원 메시지 조회 (네이티브 쿼리)
+
+    // 다른 사람에게 보낸 응원 횟수 카운트
+    @Query("SELECT COUNT(c) FROM CheerMessage c WHERE c.userNumber = :userId AND c.story.user.id <> :userId")
+    long countByUserNumberAndOthers(@Param("userId") Long userId);
 }
